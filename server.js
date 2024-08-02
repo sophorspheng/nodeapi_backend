@@ -19,3 +19,6 @@ function sendMail(to,sub,msg){
   console.log("Email sent");
 }
 sendMail("sophorspheng.num@gmail.com","Verify code OTP","OTP Code: 292382")
+
+
+////just testing for sending OTP 

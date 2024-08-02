@@ -66,8 +66,8 @@ exports.forgotPassword = (req, res) => {
             const mailOptions = {
                 from: 'sophorspheng.num@gmail.com',
                 to: user.email,
-                subject: 'Password Reset OTP',
-                text: `Your OTP code is ${otp}`
+                subject: 'OTP reset password',
+                text: `Thank You for using PurestWallpaper, Your OTP code is ${otp}`
             };
 
             transporter.sendMail(mailOptions, (err, info) => {
