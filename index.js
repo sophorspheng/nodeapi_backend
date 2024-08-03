@@ -26,10 +26,10 @@ app.post('/upload', (req, res) => {
     const { name } = req.body;
     const imagePath = req.file ? req.file.filename : null; // Handle case where file might be missing
 
-    if (!name || !imagePath) {
-        console.error('Missing name or image');
-        return res.status(400).json({ error: 'Name and image are required' });
-    }
+    // if (!name || !imagePath) {
+    //     console.error('Missing name or image');
+    //     return res.status(400).json({ error: 'Name and image are required' });
+    // }
 
     const query = 'INSERT INTO forms (name, image_path) VALUES (?, ?)';
     db.query(query, [name, imagePath], (error, results) => {
