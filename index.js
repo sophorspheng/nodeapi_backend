@@ -70,7 +70,7 @@ app.get('/data', (req, res) => {
         const imagePath = results[0].image_path;
         console.log('Retrieved imagePath:', imagePath);
 
-        // Check if imagePath is validus
+        // Check if imagePath is valid
         if (!imagePath) {
             return res.status(500).send('Image path not found in the database');
         }
@@ -105,10 +105,10 @@ app.get('/data', (req, res) => {
 });
 
 // Remove the following lines as Vercel handles the port internally
-// const PORT = process.env.PORT || 3000;
-// app.listen(PORT, () => {
-//     console.log(`Server running on port ${PORT}`);
-// });
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
 // app.listen(port, () => {
 //     console.log(`Server is running at http://localhost:${port}`);
 //   });
