@@ -24,9 +24,10 @@ app.get("/", (req, res) => {
 
 app.post('/upload', upload.single('image'), (req, res) => {
     const { name } = req.body;
-    const imagePath = req.file.filename; // The filename of the uploaded image
+    const imagePath = req.file ? req.file.filename : null; // Handle case where file might be missing
 
     if (!name || !imagePath) {
+        console.error('Missing name or image');
         return res.status(400).json({ error: 'Name and image are required' });
     }
 
