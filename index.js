@@ -19,8 +19,6 @@ const { storage } = require('./public/images');
 if (!fs.existsSync(publicDir)) {
   fs.mkdirSync(publicDir);
 }
-const multer = require('multer');
-const path = require('path');
 
 // Declare `storage` only once
 const storage = multer.diskStorage({
@@ -32,7 +30,7 @@ const storage = multer.diskStorage({
   }
 });
 
-    
+
 
 
 
