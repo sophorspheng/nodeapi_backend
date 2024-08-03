@@ -9,9 +9,23 @@ const app = express();
 const port = 3000;
 const multer = require('multer');
 const fs = require('fs');
-const upload = multer({ dest: 'public/images/' });
+// const upload = multer({ dest: 'public/images/' });
+const upload = multer({ storage: storage });
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use(bodyParser.json());
+const publicDir = path.join(__dirname, 'public');
+
+if (!fs.existsSync(publicDir)) {
+  fs.mkdirSync(publicDir);
+}
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, 'public')); // Path to your project folder
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  }
+});
 
 
 
@@ -70,7 +84,7 @@ app.get('/data', (req, res) => {
         const imagePath = results[0].image_path;
         console.log('Retrieved imagePath:', imagePath);
 
-        // Check if imagePath is valid
+        // Check if imagePath is validus
         if (!imagePath) {
             return res.status(500).send('Image path not found in the database');
         }
