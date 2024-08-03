@@ -10,7 +10,15 @@ const multer = require('multer');
 const fs = require('fs');
 
 // Set up multer for file uploads
-const upload = multer({ dest: 'public/images/' });
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'public/images/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname)); // Append timestamp to avoid conflicts
+    }
+});
+const upload = multer({ storage: storage });
 
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use(bodyParser.json());
@@ -26,10 +34,10 @@ app.post('/upload', upload.single('image'), (req, res) => {
     const { name } = req.body;
     const imagePath = req.file ? req.file.filename : null; // Handle case where file might be missing
 
-    // if (!name || !imagePath) {
-    //     console.error('Missing name or image');
-    //     return res.status(400).json({ error: 'Name and image are required' });
-    // }
+    if (!name || !imagePath) {
+        console.error('Missing name or image');
+        return res.status(400).json({ error: 'Name and image are required' });
+    }
 
     const query = 'INSERT INTO forms (name, image_path) VALUES (?, ?)';
     db.query(query, [name, imagePath], (error, results) => {
