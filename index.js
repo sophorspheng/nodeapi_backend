@@ -8,6 +8,8 @@ const path = require('path');
 const app = express();
 const multer = require('multer');
 const fs = require('fs');
+
+// Set up multer for file uploads
 const upload = multer({ dest: 'public/images/' });
 
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
@@ -20,19 +22,23 @@ app.get("/", (req, res) => {
     res.send("Hello! My name is PHENG SOPHORS, Thank You for using my API services. For any problems, contact me via email: sophorspheng.num@gmail.com");
 });
 
-app.get('/upload', upload.single('image'), (req, res) => {
-    // const { name } = req.body;
-    // const imagePath = req.file.filename; // The filename of the uploaded image
+app.post('/upload', upload.single('image'), (req, res) => {
+    const { name } = req.body;
+    const imagePath = req.file.filename; // The filename of the uploaded image
 
-    // const query = 'INSERT INTO forms (name, image_path) VALUES (?, ?)';
-    // db.query(query, [name, imagePath], (error, results) => {
-    //     if (error) {
-    //         return res.status(500).json({ error: 'Database query error' });
-    //     }
+    if (!name || !imagePath) {
+        return res.status(400).json({ error: 'Name and image are required' });
+    }
 
-    //     res.json({ id: results.insertId, name, image: `https://${req.headers.host}/images/${imagePath}` });
-    // });
-    res.send("Post")
+    const query = 'INSERT INTO forms (name, image_path) VALUES (?, ?)';
+    db.query(query, [name, imagePath], (error, results) => {
+        if (error) {
+            console.error('Database query error:', error);
+            return res.status(500).json({ error: 'Database query error' });
+        }
+
+        res.json({ id: results.insertId, name, image: `https://${req.headers.host}/images/${imagePath}` });
+    });
 });
 
 // API endpoint to get form data including image URL
@@ -40,6 +46,7 @@ app.get('/data', (req, res) => {
     const query = 'SELECT id, name, image_path FROM forms';
     db.query(query, (error, results) => {
         if (error) {
+            console.error('Database query error:', error);
             return res.status(500).json({ error: 'Database query error' });
         }
 
