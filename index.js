@@ -22,7 +22,7 @@ app.get("/", (req, res) => {
     res.send("Hello! My name is PHENG SOPHORS, Thank You for using my API services. For any problems, contact me via email: sophorspheng.num@gmail.com");
 });
 
-app.post('/upload', (req, res) => {
+app.post('/upload', upload.single('image'), (req, res) => {
     const { name } = req.body;
     const imagePath = req.file ? req.file.filename : null; // Handle case where file might be missing
 
