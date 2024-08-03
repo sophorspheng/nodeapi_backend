@@ -21,17 +21,18 @@ app.get("/", (req, res) => {
 });
 
 app.post('/upload', upload.single('image'), (req, res) => {
-    const { name } = req.body;
-    const imagePath = req.file.filename; // The filename of the uploaded image
+    // const { name } = req.body;
+    // const imagePath = req.file.filename; // The filename of the uploaded image
 
-    const query = 'INSERT INTO forms (name, image_path) VALUES (?, ?)';
-    db.query(query, [name, imagePath], (error, results) => {
-        if (error) {
-            return res.status(500).json({ error: 'Database query error' });
-        }
+    // const query = 'INSERT INTO forms (name, image_path) VALUES (?, ?)';
+    // db.query(query, [name, imagePath], (error, results) => {
+    //     if (error) {
+    //         return res.status(500).json({ error: 'Database query error' });
+    //     }
 
-        res.json({ id: results.insertId, name, image: `https://${req.headers.host}/images/${imagePath}` });
-    });
+    //     res.json({ id: results.insertId, name, image: `https://${req.headers.host}/images/${imagePath}` });
+    // });
+    res.send("Post")
 });
 
 // API endpoint to get form data including image URL
@@ -107,9 +108,9 @@ app.delete('/delete/:id', (req, res) => {
 });
 
 // Use environment variable for port
-// const PORT = process.env.PORT || 3000;
-// app.listen(PORT, () => {
-//     console.log(`Server running on port ${PORT}`);
-// });
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
 
 module.exports = app;
