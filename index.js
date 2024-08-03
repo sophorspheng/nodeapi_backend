@@ -20,7 +20,7 @@ app.get("/", (req, res) => {
     res.send("Hello! My name is PHENG SOPHORS, Thank You for using my API services. For any problems, contact me via email: sophorspheng.num@gmail.com");
 });
 
-app.post('/upload', upload.single('image'), (req, res) => {
+app.get('/upload', upload.single('image'), (req, res) => {
     // const { name } = req.body;
     // const imagePath = req.file.filename; // The filename of the uploaded image
 
