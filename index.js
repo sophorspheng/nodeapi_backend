@@ -83,6 +83,7 @@ app.delete('/delete/:id', (req, res) => {
 
         // Check if imagePath is valid
         if (!imagePath) {
+            console.error('Image path not found in the database');
             return res.status(500).send('Image path not found in the database');
         }
 
