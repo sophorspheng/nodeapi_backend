@@ -8,8 +8,9 @@ const path = require('path');
 const app = express();
 const multer = require('multer');
 const fs = require('fs');
-
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
 // Set up multer for file uploads
+const upload = multer({ dest: 'public/images/' }); // Destination folder for images
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'public/images/');
@@ -18,7 +19,7 @@ const storage = multer.diskStorage({
         cb(null, Date.now() + path.extname(file.originalname)); // Append timestamp to avoid conflicts
     }
 });
-const upload = multer({ storage: storage });
+// const upload = multer({ storage: storage });
 
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use(bodyParser.json());
@@ -32,24 +33,18 @@ app.get("/", (req, res) => {
 
 app.post('/upload', upload.single('image'), (req, res) => {
     const { name } = req.body;
-    const imagePath = req.file ? req.file.filename : null; // Handle case where file might be missing
-
-    if (!name || !imagePath) {
-        console.error('Missing name or image');
-        return res.status(400).json({ error: 'Name and image are required' });
-    }
-
+    const imagePath = req.file.filename; // The filename of the uploaded image
+  
     const query = 'INSERT INTO forms (name, image_path) VALUES (?, ?)';
-    db.query(query, [name, imagePath], (error, results) => {
-        if (error) {
-            console.error('Database query error:', error);
-            return res.status(500).json({ error: 'Database query error' });
-        }
-
-        res.json({ id: results.insertId, name, image: `https://${req.headers.host}/images/${imagePath}` });
+    connection.query(query, [name, imagePath], (error, results) => {
+      if (error) {
+        return res.status(500).json({ error: 'Database query error' });
+      }
+  
+      res.json({ id: results.insertId, name, image: `http://localhost:${PORT}/images/${imagePath}` });
     });
-});
-
+  });
+  
 // API endpoint to get form data including image URL
 app.get('/data', (req, res) => {
     const query = 'SELECT id, name, image_path FROM forms';
