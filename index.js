@@ -7,19 +7,9 @@ const db = require('./config/db');
 const path = require('path');
 const app = express();
 const multer = require('multer');
-const fs = require('fs');
-app.use('/images', express.static(path.join(__dirname, 'public/images')));
-// Set up multer for file uploads
-const upload = multer({ dest: 'public/images/' }); // Destination folder for images
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'public/images/');
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname)); // Append timestamp to avoid conflicts
-    }
-});
-// const upload = multer({ storage: storage });
+const upload = multer({ dest: 'public/images/' });
+const port = 3000;
+
 
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use(bodyParser.json());
@@ -30,7 +20,6 @@ app.use('/api/users', userRoutes);
 app.get("/", (req, res) => {
     res.send("Hello! My name is PHENG SOPHORS, Thank You for using my API services. For any problems, contact me via email: sophorspheng.num@gmail.com");
 });
-
 app.post('/upload', upload.single('image'), (req, res) => {
     const { name } = req.body;
     const imagePath = req.file.filename; // The filename of the uploaded image
@@ -41,10 +30,10 @@ app.post('/upload', upload.single('image'), (req, res) => {
         return res.status(500).json({ error: 'Database query error' });
       }
   
-      res.json({ id: results.insertId, name, image: `http://localhost:${PORT}/images/${imagePath}` });
+      res.json({ id: results.insertId, name, image: `http://localhost:${port}/images/${imagePath}` });
     });
   });
-  
+
 // API endpoint to get form data including image URL
 app.get('/data', (req, res) => {
     const query = 'SELECT id, name, image_path FROM forms';
@@ -120,9 +109,12 @@ app.delete('/delete/:id', (req, res) => {
 });
 
 // Use environment variable for port
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
-
+// const PORT = process.env.PORT || 3000;
+// app.listen(PORT, () => {
+//     console.log(`Server running on port ${PORT}`);
+// });
+app.listen(port, () => {
+    console.log(`Server is running at http://localhost:${port}`);
+  });
+  
 module.exports = app;
