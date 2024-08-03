@@ -9,28 +9,9 @@ const app = express();
 const port = 3000;
 const multer = require('multer');
 const fs = require('fs');
-// const upload = multer({ dest: 'public/images/' });
-const upload = multer({ storage: storage });
-
+const upload = multer({ dest: 'public/images/' });
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use(bodyParser.json());
-const publicDir = path.join(__dirname, 'public');
-const { storage } = require('./public/images');
-if (!fs.existsSync(publicDir)) {
-  fs.mkdirSync(publicDir);
-}
-
-// Declare `storage` only once
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     cb(null, path.join(__dirname, 'public'));
-//   },
-//   filename: function (req, file, cb) {
-//     cb(null, file.originalname);
-//   }
-// });
-
-
 
 
 
@@ -131,5 +112,5 @@ app.get('/data', (req, res) => {
 // app.listen(port, () => {
 //     console.log(`Server is running at http://localhost:${port}`);
 //   });
-module.exports = { storage };
+  
 module.exports = app;
