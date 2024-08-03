@@ -105,10 +105,10 @@ app.get('/data', (req, res) => {
 });
 
 // Remove the following lines as Vercel handles the port internally
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// const PORT = process.env.PORT || 3000;
+// app.listen(PORT, () => {
+//     console.log(`Server running on port ${PORT}`);
+// });
 // app.listen(port, () => {
 //     console.log(`Server is running at http://localhost:${port}`);
 //   });
