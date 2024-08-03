@@ -14,18 +14,20 @@ const upload = multer({ storage: storage });
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use(bodyParser.json());
 const publicDir = path.join(__dirname, 'public');
-
+const { storage } = require('./public/images');
 if (!fs.existsSync(publicDir)) {
   fs.mkdirSync(publicDir);
 }
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, 'public')); // Path to your project folder
+    cb(null, path.join(__dirname, 'public'));
   },
   filename: function (req, file, cb) {
     cb(null, file.originalname);
   }
 });
+
 
 
 
@@ -126,5 +128,5 @@ app.get('/data', (req, res) => {
 // app.listen(port, () => {
 //     console.log(`Server is running at http://localhost:${port}`);
 //   });
-  
+module.exports = { storage };
 module.exports = app;
