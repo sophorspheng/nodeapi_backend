@@ -76,7 +76,7 @@ app.get('/data', (req, res) => {
         const data = results.map(row => ({
             id: row.id,
             name: row.name,
-            image: `https://res.cloudinary.com/dqam4so8m/image/${row.image_path}` // Construct full URL
+            image: `/${row.image_path}` // Construct full URL
         }));
 
         res.json(data);
