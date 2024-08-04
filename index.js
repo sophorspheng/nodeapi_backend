@@ -49,7 +49,7 @@ app.post('/upload', upload.single('image'), (req, res) => {
             return res.status(500).json({ error: 'Database query error' });
         }
 
-        res.json({ id: results.insertId, name, image: imageUrl });
+        res.json({ id: results.insertId, name, image_path: imageUrl });
     });
 });
 
