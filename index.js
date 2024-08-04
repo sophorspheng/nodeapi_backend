@@ -78,6 +78,24 @@ app.post('/upload', upload.single('image'), (req, res) => {
 });
 
 
+// API endpoint to get form data including image URL
+app.get('/data', (req, res) => {
+    const query = 'SELECT id, name, image_path FROM forms';
+    db.query(query, (error, results) => {
+        if (error) {
+            return res.status(500).json({ error: 'Database query error' });
+        }
+
+        const data = results.map(row => ({
+            id: row.id,
+            name: row.name,
+            image: row.image_path // Already a full URL
+        }));
+
+        res.json(data);
+    });
+});
+
 app.delete('/delete/:id', (req, res) => {
     const id = req.params.id;
 
