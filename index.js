@@ -118,9 +118,9 @@ app.delete('/delete/:id', (req, res) => {
 
         // Send a POST request to Cloudinary to delete the image
         axios.post(url, {
-            public_id: publicId,
+            public_id: "cbz0kuoi6ufd2gkklqme.jpg",
             timestamp: timestamp,
-            api_key: apiKey,
+            api_key: "923626278262269",
             signature: signature
         })
         .then(response => {
