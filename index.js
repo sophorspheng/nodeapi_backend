@@ -40,17 +40,24 @@ app.post('/upload', upload.single('image'), (req, res) => {
         return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    cloudinary.uploader.upload_stream({
+    console.log('File received for upload:', file.originalname); // Debug log
+
+    // Configure Cloudinary upload options
+    const uploadOptions = {
         folder: 'image',
         resource_type: 'image',
-        public_id: file.originalname.split('.')[0] // Optional: Use the original file name (excluding extension)
-    }, (error, result) => {
+        public_id: file.originalname.split('.')[0], // Use the file name without extension
+    };
+
+    cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
         if (error) {
             console.error('Cloudinary upload error:', error);
             return res.status(500).json({ error: 'Cloudinary upload error' });
         }
 
         const imageUrl = result.secure_url; // Cloudinary URL of the uploaded image
+
+        console.log('Image uploaded to Cloudinary:', imageUrl); // Debug log
 
         const query = 'INSERT INTO forms (name, image_path) VALUES (?, ?)';
         db.query(query, [name, imageUrl], (error, results) => {
@@ -59,30 +66,17 @@ app.post('/upload', upload.single('image'), (req, res) => {
                 return res.status(500).json({ error: 'Database query error' });
             }
 
+            console.log('Image data inserted into database:', {
+                id: results.insertId,
+                name,
+                image: imageUrl
+            }); // Debug log
+
             res.json({ id: results.insertId, name, image: imageUrl });
         });
     }).end(file.buffer); // End the stream with the file buffer
 });
 
-
-
-// API endpoint to get form data including image URL
-app.get('/data', (req, res) => {
-    const query = 'SELECT id, name, image_path FROM forms';
-    db.query(query, (error, results) => {
-        if (error) {
-            return res.status(500).json({ error: 'Database query error' });
-        }
-
-        const data = results.map(row => ({
-            id: row.id,
-            name: row.name,
-            image: row.image_path // Already a full URL
-        }));
-
-        res.json(data);
-    });
-});
 
 app.delete('/delete/:id', (req, res) => {
     const id = req.params.id;
