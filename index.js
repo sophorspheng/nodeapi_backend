@@ -86,16 +86,47 @@ app.get('/data', (req, res) => {
 app.delete('/delete/:id', (req, res) => {
     const id = req.params.id;
 
-    // Fetch the image path from the database
-    const selectQuery = 'SELECT image_path FROM forms WHERE id = ?';
+    // Fetch the image URL from the database
+    const selectQuery = 'SELECT image_url FROM forms WHERE id = ?';
 
     db.query(selectQuery, [id], (err, results) => {
         if (err) {
             console.error('Database query error:', err);
             return res.status(500).send('Server error');
-        }else if (results.length === 0) {
+        }
+
+        if (results.length === 0) {
             return res.status(404).send('Record not found');
-        }else{
+        }
+
+        const imageUrl = results[0].image_url;
+        console.log('Retrieved imageUrl:', imageUrl);
+
+        // Extract the public ID of the image from the URL
+        const publicId = imageUrl.split('/').pop().split('.')[0];
+        console.log('Extracted public ID:', publicId);
+
+        // Create the signature for the Cloudinary request
+        const timestamp = Math.floor(Date.now() / 1000);
+        const signature = crypto
+            .createHash('sha1')
+            .update(`public_id=${publicId}&timestamp=${timestamp}${apiSecret}`)
+            .digest('hex');
+
+        // Create the URL for the Cloudinary API
+        const url = `https://res.cloudinary.com/dqam4so8m/${cloudName}/image/destroy`;
+
+        // Send a POST request to Cloudinary to delete the image
+        axios.post(url, {
+            public_id: publicId,
+            timestamp: timestamp,
+            api_key: apiKey,
+            signature: signature
+        })
+        .then(response => {
+            console.log('Cloudinary deletion response:', response.data);
+
+            // Now delete the record from the database
             const deleteQuery = 'DELETE FROM forms WHERE id = ?';
 
             db.query(deleteQuery, [id], (err, result) => {
@@ -110,31 +141,11 @@ app.delete('/delete/:id', (req, res) => {
 
                 res.send('Record and image deleted successfully');
             });
-        }
-
-        
-
-        // const imagePath = results[0].image_path;
-        // console.log('Retrieved imagePath:', imagePath);
-
-        // // Check if imagePath is valid
-        // if (!imagePath) {
-        //     return res.status(500).send('Image path not found in the database');
-        // }
-
-        // const fullImagePath = path.join(__dirname, 'public/images', imagePath);
-        // console.log('Full image path:', fullImagePath);
-
-        // // Delete the image file
-        // fs.unlink(fullImagePath, (err) => {
-        //     if (err) {
-        //         console.error('File deletion error:', err);
-        //         return res.status(500).send('Failed to delete image');
-        //     }
-
-            // Now delete the record from the database
-            
-
+        })
+        .catch(error => {
+            console.error('Cloudinary deletion error:', error);
+            return res.status(500).send('Failed to delete image');
+        });
     });
 });
 
