@@ -8,12 +8,16 @@ const path = require('path');
 const cloudinary = require('cloudinary').v2;
 const app = express();
 const multer = require('multer');
+const crypto = require('crypto');
 const fs = require('fs');
 cloudinary.config({
     cloud_name: "dqam4so8m",
     api_key: "923626278262269",
     api_secret: "rbm0iP7OzeXFC5H2p2zk5ZmV_s0"
 });
+const url = `https://api.cloudinary.com/v1_1/${dqam4so8mss}/image/destroy`;   
+const imageUrl = 'https://res.cloudinary.com/dqam4so8m/image/upload/v1722740390/cbz0kuoi6ufd2gkklqme.jpg';
+const publicId = imageUrl.split('/').pop().split('.')[0];
 
 const upload = multer({
     storage: multer.memoryStorage() // Use memory storage to upload images to Cloudinary
@@ -118,7 +122,7 @@ app.delete('/delete/:id', (req, res) => {
 
         // Send a POST request to Cloudinary to delete the image
         axios.post(url, {
-            public_id: "cbz0kuoi6ufd2gkklqme.jpg",
+            public_id: publicId,
             timestamp: timestamp,
             api_key: "923626278262269",
             signature: signature
