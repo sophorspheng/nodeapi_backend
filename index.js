@@ -57,67 +57,52 @@ app.delete('/delete/:id', (req, res) => {
     const id = req.params.id;
 
     // Fetch the image path from the database
-    const selectQuery = 'SELECT id, name, image_path FROM forms';
+    const selectQuery = 'SELECT image_path FROM forms WHERE id = ?';
 
     db.query(selectQuery, [id], (err, results) => {
         if (err) {
             console.error('Database query error:', err);
             return res.status(500).send('Server error');
-        }else  if (results.length === 0) {
-            return res.status(404).send('Record not found');
-        }else{
-
-            const query = 'DELETE FROM forms WHERE id = ?';
-            db.query(query, (error, results) => {
-                if (error) {
-                    return res.status(500).json({ error: 'Database query error' });
-                }
-        
-                // Construct the full URL to the image
-                const data = results.map(row => ({
-                    id: row.id,
-                    name: row.name,
-                    image: `https://${req.headers.host}/images/${row.image_path}` // Construct full URL
-                }));
-        
-                res.json(data);
-            });
         }
 
-        // const imagePath = results[0].image_path;
-        // console.log('Retrieved imagePath:', imagePath);
+        if (results.length === 0) {
+            return res.status(404).send('Record not found');
+        }
 
-        // // Check if imagePath is valid
-        // if (!imagePath) {
-        //     return res.status(500).send('Image path not found in the database');
-        // }
+        const imagePath = results[0].image_path;
+        console.log('Retrieved imagePath:', imagePath);
 
-        // const fullImagePath = path.join(__dirname, 'public/images', imagePath);
-        // console.log('Full image path:', fullImagePath);
+        // Check if imagePath is valid
+        if (!imagePath) {
+            return res.status(500).send('Image path not found in the database');
+        }
 
-        // // Delete the image file
-        // fs.unlink(fullImagePath, (err) => {
-        //     if (err) {
-        //         console.error('File deletion error:', err);
-        //         return res.status(500).send('Failed to delete image');
-        //     }
+        const fullImagePath = path.join(__dirname, 'public/images', imagePath);
+        console.log('Full image path:', fullImagePath);
 
-        //     // Now delete the record from the database
-        //     const deleteQuery = 'DELETE FROM forms WHERE id = ?';
+        // Delete the image file
+        fs.unlink(fullImagePath, (err) => {
+            if (err) {
+                console.error('File deletion error:', err);
+                return res.status(500).send('Failed to delete image');
+            }
 
-        //     db.query(deleteQuery, [id], (err, result) => {
-        //         if (err) {
-        //             console.error('Database deletion error:', err);
-        //             return res.status(500).send('Server error');
-        //         }
+            // Now delete the record from the database
+            const deleteQuery = 'DELETE FROM forms WHERE id = ?';
 
-        //         if (result.affectedRows === 0) {
-        //             return res.status(404).send('Record not found');
-        //         }
+            db.query(deleteQuery, [id], (err, result) => {
+                if (err) {
+                    console.error('Database deletion error:', err);
+                    return res.status(500).send('Server error');
+                }
 
-        //         res.send('Record and image deleted successfully');
-        //     });
-        // });
+                if (result.affectedRows === 0) {
+                    return res.status(404).send('Record not found');
+                }
+
+                res.send('Record and image deleted successfully');
+            });
+        });
     });
 });
 
