@@ -9,6 +9,7 @@ const app = express();
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
+
 app.use(bodyParser.json());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
