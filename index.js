@@ -40,36 +40,42 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     }
 
     try {
-        // Upload image to Cloudinary
-        const result = await cloudinary.uploader.upload_stream({
-            folder: 'image', // Specify Cloudinary folder
-            resource_type: 'image',
-            public_id: file.originalname.split('.')[0] // Optional: Use the original file name (excluding extension)
-        }, (error, result) => {
-            if (error) {
-                return res.status(500).json({ error: 'Cloudinary upload error' });
-            }
-            
-            const imageUrl = result.secure_url; // Cloudinary URL of the uploaded image
-
-            // Save data to the database
-            const query = 'INSERT INTO forms (name, image_path) VALUES (?, ?)';
-            db.query(query, [name, imageUrl], (error, results) => {
+        // Create a new promise for cloudinary.upload_stream
+        const uploadPromise = new Promise((resolve, reject) => {
+            cloudinary.uploader.upload_stream({
+                folder: 'image',
+                resource_type: 'image',
+                public_id: file.originalname.split('.')[0] // Optional: Use the original file name (excluding extension)
+            }, (error, result) => {
                 if (error) {
-                    return res.status(500).json({ error: 'Database query error' });
+                    return reject(error);
                 }
-
-                res.json({ id: results.insertId, name, image: imageUrl });
-            });
+                resolve(result);
+            }).end(file.buffer); // End the stream with the file buffer
         });
 
-        // Make sure to use `upload_stream` properly
-        file.stream.pipe(result);
+        // Await the result of the upload
+        const result = await uploadPromise;
+
+        const imageUrl = result.secure_url; // Cloudinary URL of the uploaded image
+
+        // Save data to the database
+        const query = 'INSERT INTO forms (name, image_path) VALUES (?, ?)';
+        db.query(query, [name, imageUrl], (error, results) => {
+            if (error) {
+                console.error('Database query error:', error); // Log the database error
+                return res.status(500).json({ error: 'Database query error' });
+            }
+
+            res.json({ id: results.insertId, name, image: imageUrl });
+        });
 
     } catch (error) {
-        res.status(500).json({ error: 'Server error' });
+        console.error('Cloudinary upload error:', error); // Log the Cloudinary error
+        res.status(500).json({ error: 'Cloudinary upload error' });
     }
 });
+
 
 // API endpoint to get form data including image URL
 app.get('/data', (req, res) => {
