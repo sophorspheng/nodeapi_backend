@@ -57,7 +57,7 @@ app.delete('/delete/:id', (req, res) => {
     const id = req.params.id;
 
     // Fetch the image path from the database
-    const selectQuery = 'DELETE FROM forms WHERE id = ?';
+    const selectQuery = 'SELECT id, name, image_path FROM forms';
 
     db.query(selectQuery, [id], (err, results) => {
         if (err) {
