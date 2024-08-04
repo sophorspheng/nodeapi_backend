@@ -12,14 +12,15 @@ const app = express();
 
 // Initialize Cloudinary
 cloudinary.config({
-    cloud_name: "dqam4so8m",
-    api_key: "923626278262269",
-    api_secret: "rbm0iP7OzeXFC5H2p2zk5ZmV_s0"
-});
+    cloud_name: 'dqam4so8m',
+    api_key: '923626278262269',
+    api_secret: 'rbm0iP7OzeXFC5H2p2zk5ZmV_s0'
+  });
+  
+  const storage = multer.memoryStorage(); // Store file in memory
+  const upload = multer({ storage: storage });
+  
 
-// Configure Multer
-const storage = multer.memoryStorage(); // Store file in memory
-const upload = multer({ storage: storage });
 
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use(bodyParser.json());
@@ -31,7 +32,7 @@ app.get("/", (req, res) => {
     res.send("Hello! My name is PHENG SOPHORS, Thank You for using my API services. For any problems, contact me via email: sophorspheng.num@gmail.com");
 });
 
-app.post('/upload', upload.single('image'), async (req, res) => {
+app.post('/upload', upload.single('image'), (req, res) => {
     const { name } = req.body;
     const file = req.file;
 
@@ -39,42 +40,30 @@ app.post('/upload', upload.single('image'), async (req, res) => {
         return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    try {
-        // Create a new promise for cloudinary.upload_stream
-        const uploadPromise = new Promise((resolve, reject) => {
-            cloudinary.uploader.upload_stream({
-                folder: 'image',
-                resource_type: 'image',
-                public_id: file.originalname.split('.')[0] // Optional: Use the original file name (excluding extension)
-            }, (error, result) => {
-                if (error) {
-                    return reject(error);
-                }
-                resolve(result);
-            }).end(file.buffer); // End the stream with the file buffer
-        });
-
-        // Await the result of the upload
-        const result = await uploadPromise;
+    cloudinary.uploader.upload_stream({
+        folder: 'image',
+        resource_type: 'image',
+        public_id: file.originalname.split('.')[0] // Optional: Use the original file name (excluding extension)
+    }, (error, result) => {
+        if (error) {
+            console.error('Cloudinary upload error:', error);
+            return res.status(500).json({ error: 'Cloudinary upload error' });
+        }
 
         const imageUrl = result.secure_url; // Cloudinary URL of the uploaded image
 
-        // Save data to the database
         const query = 'INSERT INTO forms (name, image_path) VALUES (?, ?)';
         db.query(query, [name, imageUrl], (error, results) => {
             if (error) {
-                console.error('Database query error:', error); // Log the database error
+                console.error('Database query error:', error);
                 return res.status(500).json({ error: 'Database query error' });
             }
 
             res.json({ id: results.insertId, name, image: imageUrl });
         });
-
-    } catch (error) {
-        console.error('Cloudinary upload error:', error); // Log the Cloudinary error
-        res.status(500).json({ error: 'Cloudinary upload error' });
-    }
+    }).end(file.buffer); // End the stream with the file buffer
 });
+
 
 
 // API endpoint to get form data including image URL
