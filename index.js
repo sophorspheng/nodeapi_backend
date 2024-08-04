@@ -36,14 +36,12 @@ app.post('/upload', upload.single('image'), async (req, res) => {
       }
   
       // Upload image to Cloudinary
-      const result = await cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
+      cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
         if (error) {
           return res.status(500).json({ message: 'Image upload failed', error });
         }
         res.json({ name, imageUrl: result.secure_url });
-      });
-  
-      file.stream.pipe(result);
+      }).end(file.buffer);
   
     } catch (error) {
       res.status(500).json({ message: 'Server error', error });
