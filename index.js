@@ -57,15 +57,15 @@ app.delete('/delete/:id', (req, res) => {
     const id = req.params.id;
 
     // Fetch the image path from the database
-    // const selectQuery = 'SELECT id, name, image_path FROM forms';
+    const selectQuery = 'SELECT id, name, image_path FROM forms';
 
-    // db.query(selectQuery, [id], (err, results) => {
-    //     if (err) {
-    //         console.error('Database query error:', err);
-    //         return res.status(500).send('Server error');
-    //     }else  if (results.length === 0) {
-    //         return res.status(404).send('Record not found');
-    //     }else{
+    db.query(selectQuery, [id], (err, results) => {
+        if (err) {
+            console.error('Database query error:', err);
+            return res.status(500).send('Server error');
+        }else  if (results.length === 0) {
+            return res.status(404).send('Record not found');
+        }else{
 
             const query = 'DELETE FROM forms WHERE id = ?';
             db.query(query, (error, results) => {
@@ -82,7 +82,7 @@ app.delete('/delete/:id', (req, res) => {
         
                 res.json(data);
             });
-        // }
+        }
 
         // const imagePath = results[0].image_path;
         // console.log('Retrieved imagePath:', imagePath);
@@ -119,7 +119,7 @@ app.delete('/delete/:id', (req, res) => {
         //     });
         // });
     });
-// });
+});
 
 // Use environment variable for port
 const PORT = process.env.PORT || 3000;
