@@ -9,7 +9,7 @@ const app = express();
 const multer = require('multer');
 const fs = require('fs');
 const upload = multer({ dest: 'public/images/' });
-
+const cloudinary = require('cloudinary').v2;
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use(bodyParser.json());
 
@@ -20,18 +20,31 @@ app.get("/", (req, res) => {
     res.send("Hello! My name is PHENG SOPHORS, Thank You for using my API services. For any problems, contact me via email: sophorspheng.num@gmail.com");
 });
 
+cloudinary.config({
+    cloud_name: "dqam4so8m",
+    api_key: "923626278262269",
+    api_secret: "rbm0iP7OzeXFC5H2p2zk5ZmV_s0"
+});
+
 app.post('/upload', upload.single('image'), (req, res) => {
     const { name } = req.body;
-    const imagePath = req.file.filename; // The filename of the uploaded image
 
-    const query = 'INSERT INTO forms (name, image_path) VALUES (?, ?)';
-    db.query(query, [name, imagePath], (error, results) => {
+    cloudinary.uploader.upload_stream((error, result) => {
         if (error) {
-            return res.status(500).json({ error: 'Database query error' });
+            return res.status(500).json({ error: 'Image upload error' });
         }
 
-        res.json({ id: results.insertId, name, image: `https://${req.headers.host}/images/${imagePath}` });
-    });
+        const imageUrl = result.secure_url; // This is the view link to the image
+
+        const query = 'INSERT INTO forms (name, image_path) VALUES (?, ?)';
+        db.query(query, [name, imageUrl], (error, results) => {
+            if (error) {
+                return res.status(500).json({ error: 'Database query error' });
+            }
+
+            res.json({ id: results.insertId, name, image: imageUrl });
+        });
+    }).end(req.file.buffer);
 });
 
 // API endpoint to get form data including image URL
