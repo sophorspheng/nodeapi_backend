@@ -93,31 +93,9 @@ app.delete('/delete/:id', (req, res) => {
         if (err) {
             console.error('Database query error:', err);
             return res.status(500).send('Server error');
-        }
-
-        if (results.length === 0) {
+        }else if (results.length === 0) {
             return res.status(404).send('Record not found');
-        }
-
-        const imagePath = results[0].image_path;
-        console.log('Retrieved imagePath:', imagePath);
-
-        // Check if imagePath is valid
-        if (!imagePath) {
-            return res.status(500).send('Image path not found in the database');
-        }
-
-        const fullImagePath = path.join(__dirname, 'public/images', imagePath);
-        console.log('Full image path:', fullImagePath);
-
-        // Delete the image file
-        fs.unlink(fullImagePath, (err) => {
-            if (err) {
-                console.error('File deletion error:', err);
-                return res.status(500).send('Failed to delete image');
-            }
-
-            // Now delete the record from the database
+        }else{
             const deleteQuery = 'DELETE FROM forms WHERE id = ?';
 
             db.query(deleteQuery, [id], (err, result) => {
@@ -132,7 +110,31 @@ app.delete('/delete/:id', (req, res) => {
 
                 res.send('Record and image deleted successfully');
             });
-        });
+        }
+
+        
+
+        // const imagePath = results[0].image_path;
+        // console.log('Retrieved imagePath:', imagePath);
+
+        // // Check if imagePath is valid
+        // if (!imagePath) {
+        //     return res.status(500).send('Image path not found in the database');
+        // }
+
+        // const fullImagePath = path.join(__dirname, 'public/images', imagePath);
+        // console.log('Full image path:', fullImagePath);
+
+        // // Delete the image file
+        // fs.unlink(fullImagePath, (err) => {
+        //     if (err) {
+        //         console.error('File deletion error:', err);
+        //         return res.status(500).send('Failed to delete image');
+        //     }
+
+            // Now delete the record from the database
+            
+
     });
 });
 
