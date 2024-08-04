@@ -105,7 +105,7 @@ app.delete('/delete/:id', (req, res) => {
         // Extract the public ID including the folder structure
         // Example: https://res.cloudinary.com/demo/image/upload/v1611234567/image.jpg
         // public_id: image/upload/v1611234567/image
-        const imagePathParts = imageUrl.split('/image/');
+        const imagePathParts = imageUrl.split('/upload/');
         const publicId = imagePathParts[1].split('.')[0]; // Extract the public_id without the extension
 
         // Delete the image from Cloudinary
