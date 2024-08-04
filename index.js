@@ -13,16 +13,16 @@ const app = express();
 
 // Initialize Cloudinary
 cloudinary.config({
-  cloud_name: 'your_cloud_name',
-  api_key: 'your_api_key',
-  api_secret: 'your_api_secret'
+    cloud_name: "dqam4so8m",
+    api_key: "923626278262269",
+    api_secret: "rbm0iP7OzeXFC5H2p2zk5ZmV_s0"
 });
 
 // Configure Cloudinary Storage
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'your_folder_name',
+    folder: 'image',
     allowed_formats: ['jpg', 'png', 'jpeg'],
   },
 });
