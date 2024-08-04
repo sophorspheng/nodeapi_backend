@@ -7,7 +7,6 @@ const db = require('./config/db');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
 const app = express();
 
@@ -18,15 +17,8 @@ cloudinary.config({
     api_secret: "rbm0iP7OzeXFC5H2p2zk5ZmV_s0"
 });
 
-// Configure Cloudinary Storage
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'image',
-    allowed_formats: ['jpg', 'png', 'jpeg'],
-  },
-});
-
+// Configure Multer
+const storage = multer.memoryStorage(); // Store file in memory
 const upload = multer({ storage: storage });
 
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
@@ -39,18 +31,44 @@ app.get("/", (req, res) => {
     res.send("Hello! My name is PHENG SOPHORS, Thank You for using my API services. For any problems, contact me via email: sophorspheng.num@gmail.com");
 });
 
-app.post('/upload', upload.single('image'), (req, res) => {
+app.post('/upload', upload.single('image'), async (req, res) => {
     const { name } = req.body;
-    const imageUrl = req.file.path; // The URL of the uploaded image on Cloudinary
+    const file = req.file;
 
-    const query = 'INSERT INTO forms (name, image_path) VALUES (?, ?)';
-    db.query(query, [name, imageUrl], (error, results) => {
-        if (error) {
-            return res.status(500).json({ error: 'Database query error' });
-        }
+    if (!file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+    }
 
-        res.json({ id: results.insertId, name, image_path: imageUrl });
-    });
+    try {
+        // Upload image to Cloudinary
+        const result = await cloudinary.uploader.upload_stream({
+            folder: 'image', // Specify Cloudinary folder
+            resource_type: 'image',
+            public_id: file.originalname.split('.')[0] // Optional: Use the original file name (excluding extension)
+        }, (error, result) => {
+            if (error) {
+                return res.status(500).json({ error: 'Cloudinary upload error' });
+            }
+            
+            const imageUrl = result.secure_url; // Cloudinary URL of the uploaded image
+
+            // Save data to the database
+            const query = 'INSERT INTO forms (name, image_path) VALUES (?, ?)';
+            db.query(query, [name, imageUrl], (error, results) => {
+                if (error) {
+                    return res.status(500).json({ error: 'Database query error' });
+                }
+
+                res.json({ id: results.insertId, name, image: imageUrl });
+            });
+        });
+
+        // Make sure to use `upload_stream` properly
+        file.stream.pipe(result);
+
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 
 // API endpoint to get form data including image URL
