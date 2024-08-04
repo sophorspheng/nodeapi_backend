@@ -87,6 +87,7 @@ app.get('/data', (req, res) => {
 app.delete('/delete/:id', (req, res) => {
     const id = req.params.id;
 
+    // Query to fetch the image path from the database
     const selectQuery = 'SELECT image_path FROM forms WHERE id = ?';
 
     db.query(selectQuery, [id], (err, results) => {
@@ -100,7 +101,7 @@ app.delete('/delete/:id', (req, res) => {
         }
 
         const imageUrl = results[0].image_path;
-        const publicId = imageUrl.split('/').pop().split('.')[0]; // Extract public ID
+        const publicId = imageUrl.split('/').pop().split('.')[0]; // Extract the public ID
 
         // Delete the image from Cloudinary
         cloudinary.uploader.destroy(publicId, (error) => {
@@ -109,6 +110,7 @@ app.delete('/delete/:id', (req, res) => {
                 return res.status(500).send('Failed to delete image from Cloudinary');
             }
 
+            // Delete the record from the database
             const deleteQuery = 'DELETE FROM forms WHERE id = ?';
 
             db.query(deleteQuery, [id], (err, result) => {
@@ -126,6 +128,7 @@ app.delete('/delete/:id', (req, res) => {
         });
     });
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
