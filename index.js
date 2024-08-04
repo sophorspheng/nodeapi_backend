@@ -15,7 +15,7 @@ cloudinary.config({
     api_key: "923626278262269",
     api_secret: "rbm0iP7OzeXFC5H2p2zk5ZmV_s0"
 });
-const url = `https://api.cloudinary.com/v1_1/${dqam4so8mss}/image/destroy`;   
+const url = `https://api.cloudinary.com/v1_1/${cloud_name}/image/destroy`;   
 const imageUrl = 'https://res.cloudinary.com/dqam4so8m/image/upload/v1722740390/cbz0kuoi6ufd2gkklqme.jpg';
 const publicId = imageUrl.split('/').pop().split('.')[0];
 
