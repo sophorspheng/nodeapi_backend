@@ -4,8 +4,6 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const mysql = require('mysql');
 const db = require('./config/db');
-const path = require('path');
-const fs = require('fs');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const app = express();
@@ -15,14 +13,8 @@ cloudinary.config({
     cloud_name: 'dqam4so8m',
     api_key: '923626278262269',
     api_secret: 'rbm0iP7OzeXFC5H2p2zk5ZmV_s0'
-  });
-  
-  const storage = multer.memoryStorage(); // Store file in memory
-  const upload = multer({ storage: storage });
-  
+});
 
-
-app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use(bodyParser.json());
 
 app.use('/api/auth', authRoutes);
@@ -32,51 +24,41 @@ app.get("/", (req, res) => {
     res.send("Hello! My name is PHENG SOPHORS, Thank You for using my API services. For any problems, contact me via email: sophorspheng.num@gmail.com");
 });
 
-app.post('/upload', upload.single('image'), (req, res) => {
-    const { name } = req.body;
-    const file = req.file;
-
-    if (!file) {
-        return res.status(400).json({ error: 'No file uploaded' });
+// Configure multer storage
+const storage = multer.diskStorage({
+    filename: (req, file, callback) => {
+        callback(null, Date.now() + '-' + file.originalname);
     }
-
-    console.log('File received for upload:', file.originalname); // Debug log
-
-    // Configure Cloudinary upload options
-    const uploadOptions = {
-        folder: 'image',
-        resource_type: 'image',
-        public_id: file.originalname.split('.')[0], // Use the file name without extension
-    };
-
-    cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
-        if (error) {
-            console.error('Cloudinary upload error:', error);
-            return res.status(500).json({ error: 'Cloudinary upload error' });
-        }
-
-        const imageUrl = result.secure_url; // Cloudinary URL of the uploaded image
-
-        console.log('Image uploaded to Cloudinary:', imageUrl); // Debug log
-
-        const query = 'INSERT INTO forms (name, image_path) VALUES (?, ?)';
-        db.query(query, [name, imageUrl], (error, results) => {
-            if (error) {
-                console.error('Database query error:', error);
-                return res.status(500).json({ error: 'Database query error' });
-            }
-
-            console.log('Image data inserted into database:', {
-                id: results.insertId,
-                name,
-                image: imageUrl
-            }); // Debug log
-
-            res.json({ id: results.insertId, name, image: imageUrl });
-        });
-    }).end(file.buffer); // End the stream with the file buffer
 });
 
+const upload = multer({ storage: storage });
+
+// Upload endpoint
+app.post('/upload', upload.array('images', 10), async (req, res) => {
+    try {
+        let imageUrls = [];
+        
+        for (const file of req.files) {
+            const result = await cloudinary.uploader.upload(file.path, {
+                folder: 'image'
+            });
+            imageUrls.push(result.secure_url);
+        }
+
+        // Store image URLs in MySQL database
+        const imageRecords = imageUrls.map(url => [url]);
+        const query = 'INSERT INTO images (image_path) VALUES ?';
+
+        db.query(query, [imageRecords], (error, results) => {
+            if (error) {
+                return res.status(500).json({ error: error.message });
+            }
+            res.status(200).json({ urls: imageUrls });
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 // API endpoint to get form data including image URL
 app.get('/data', (req, res) => {
@@ -113,12 +95,9 @@ app.delete('/delete/:id', (req, res) => {
         }
 
         const imageUrl = results[0].image_path;
-        
+
         // Extract the public ID including the folder structure
-        // Example: https://res.cloudinary.com/demo/image/upload/v1611234567/image.jpg
-        // public_id: image/upload/v1611234567/image
-        const imagePathParts = imageUrl.split('/upload/');
-        const publicId = imagePathParts[1].split('.')[0]; // Extract the public_id without the extension
+        const publicId = imageUrl.split('/').slice(-2).join('/').split('.')[0];
 
         // Delete the image from Cloudinary
         cloudinary.uploader.destroy(publicId, (error) => {
@@ -145,7 +124,6 @@ app.delete('/delete/:id', (req, res) => {
         });
     });
 });
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
