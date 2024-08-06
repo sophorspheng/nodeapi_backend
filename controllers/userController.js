@@ -48,7 +48,6 @@ exports.deleteUser = (req, res) => {
 };
 
 exports.reportImage = (req,res)=>{
-    res.send("HEllo")
     const { imageId, reportText } = req.body;
 
     if (!imageId || !reportText) {
