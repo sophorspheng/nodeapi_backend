@@ -35,6 +35,7 @@ app.post('/upload', upload.array('images', 10), (req, res) => { // Allow up to 1
     const files = req.files;
 
     if (!files || files.length === 0) {
+        console.error('No files uploaded');
         return res.status(400).json({ error: 'No files uploaded' });
     }
 
@@ -80,6 +81,7 @@ app.post('/upload', upload.array('images', 10), (req, res) => { // Allow up to 1
             res.status(500).json({ error: 'Error uploading images' });
         });
 });
+
 
 // API endpoint to get form data including image URL
 app.get('/data', (req, res) => {
