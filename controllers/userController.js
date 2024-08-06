@@ -63,4 +63,5 @@ exports.reportImage = (req,res)=>{
 
         res.status(201).json({ message: 'Image reported successfully' });
     });
+
 }
