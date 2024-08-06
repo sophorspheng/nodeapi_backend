@@ -4,6 +4,7 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const mysql = require('mysql');
 const db = require('./config/db');
+const router = express.Router();
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
@@ -29,6 +30,9 @@ app.use('/api/users', userRoutes);
 app.get("/", (req, res) => {
     res.send("Hello! My name is PHENG SOPHORS, Thank You for using my API services. For any problems, contact me via email: sophorspheng.num@gmail.com");
 });
+// Endpoint to report an image
+
+
 
 app.post('/upload', upload.array('images', 10), (req, res) => { // Allow up to 10 images
     const { name } = req.body;
