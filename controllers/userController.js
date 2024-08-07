@@ -1,5 +1,5 @@
 const User = require('../models/userModel');
-
+const db = require('./config/db');
 exports.getAllUsers = (req, res) => {
     User.getAllUsers((err, results) => {
         if (err) {
