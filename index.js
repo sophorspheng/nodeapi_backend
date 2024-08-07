@@ -32,29 +32,6 @@ app.get("/", (req, res) => {
 });
 // Endpoint to report an image
 
-app.post('/api/users/reports', (req, res) => {
-    try {
-        const { imageId, reportText } = req.body;
-
-        if (!imageId || !reportText) {
-            return res.status(400).json({ error: 'Image ID and report text are required' });
-        }
-
-        const query = 'INSERT INTO reports (image_id, report_text) VALUES (?, ?)';
-        db.query(query, [imageId, reportText], (err, result) => {
-            if (err) {
-                console.error('Database query error:', err);
-                return res.status(500).json({ error: 'Database query error', details: err.message });
-            }
-
-            res.status(201).json({ message: 'Image reported successfully' });
-        });
-    } catch (err) {
-        console.error('Unexpected server error:', err);
-        res.status(500).json({ error: 'Unexpected server error', details: err.message });
-    }
-});
-
 
 app.post('/upload', upload.array('images', 10), (req, res) => { // Allow up to 10 images
     const { name } = req.body;

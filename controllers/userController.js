@@ -47,21 +47,26 @@ exports.deleteUser = (req, res) => {
     });
 };
 
-// exports.reportImage = (req,res)=>{
-//     const { imageId, reportText } = req.body;
+exports.reportImage = (req,res)=>{
+    try {
+        const { imageId, reportText } = req.body;
 
-//     if (!imageId || !reportText) {
-//         return res.status(400).json({ error: 'Image ID and report text are required' });
-//     }
+        if (!imageId || !reportText) {
+            return res.status(400).json({ error: 'Image ID and report text are required' });
+        }
 
-//     const query = 'INSERT INTO reports (image_id, report_text) VALUES (?, ?)';
-//     db.query(query, [imageId, reportText], (err, result) => {
-//         if (err) {
-//             console.error('Database query error:', err);
-//             return res.status(500).json({ error: 'Database query error' });
-//         }
+        const query = 'INSERT INTO reports (image_id, report_text) VALUES (?, ?)';
+        db.query(query, [imageId, reportText], (err, result) => {
+            if (err) {
+                console.error('Database query error:', err);
+                return res.status(500).json({ error: 'Database query error', details: err.message });
+            }
 
-//         res.status(201).json({ message: 'Image reported successfully' });
-//     });
+            res.status(201).json({ message: 'Image reported successfully' });
+        });
+    } catch (err) {
+        console.error('Unexpected server error:', err);
+        res.status(500).json({ error: 'Unexpected server error', details: err.message });
+    }
 
-// }
+}
