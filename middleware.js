@@ -10,7 +10,7 @@ function authorizeRoles(...roles) {
         }
 
         try {
-            const decoded = jwt.verify(token, 'your_jwt_secret');
+            const decoded = jwt.verify(token, '#@$%#@&GFJHFVHJF**&^*6876*%^%$$%$%&^&');
             req.user = decoded;
 
             console.log('Decoded token:', decoded);
