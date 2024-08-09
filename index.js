@@ -31,6 +31,9 @@ app.get("/", (req, res) => {
     res.send("Hello! My name is PHENG SOPHORS, Thank You for using my API services. For any problems, contact me via email: sophorspheng.num@gmail.com");
 });
 // Endpoint to report an image
+app.get('/test-role', authorizeRoles('admin', 'user'), (req, res) => {
+    res.send(`Role is: ${req.user.role}`);
+});
 
 
 app.post('/upload', upload.array('images', 10), (req, res) => { // Allow up to 10 images
@@ -87,23 +90,23 @@ app.post('/upload', upload.array('images', 10), (req, res) => { // Allow up to 1
 
 
 // API endpoint to get form data including image URL
-app.get('/data', (req, res) => {
-    const query = 'SELECT id, name, image_path FROM forms';
-    db.query(query, (error, results) => {
-        if (error) {
-            return res.status(500).json({ error: 'Database query error' });
-        }
+// app.get('/data', (req, res) => {
+//     const query = 'SELECT id, name, image_path FROM forms';
+//     db.query(query, (error, results) => {
+//         if (error) {
+//             return res.status(500).json({ error: 'Database query error' });
+//         }
 
-        const data = results.map(row => ({
-            id: row.id,
-            name: row.name,
-            image: row.image_path // Already a full URL
-        }));
+//         const data = results.map(row => ({
+//             id: row.id,
+//             name: row.name,
+//             image: row.image_path // Already a full URL
+//         }));
 
-        res.json(data);
-    });
-});
-// Protected route: Both admins and users can access
+//         res.json(data);
+//     });
+// });
+// Both admins and users can access this route
 app.get('/data', authorizeRoles('admin', 'user'), (req, res) => {
     const query = 'SELECT id, name, image_path FROM forms';
     db.query(query, (error, results) => {
@@ -121,7 +124,7 @@ app.get('/data', authorizeRoles('admin', 'user'), (req, res) => {
     });
 });
 
-// Protected route: Only admins can access
+// Only admins can access this route
 app.delete('/delete/:id', authorizeRoles('admin'), (req, res) => {
     const id = req.params.id;
 

@@ -5,6 +5,7 @@ function authorizeRoles(...roles) {
         const token = req.headers['authorization'];
 
         if (!token) {
+            console.log('No token provided');
             return res.status(403).send('A token is required for authentication');
         }
 
@@ -12,12 +13,16 @@ function authorizeRoles(...roles) {
             const decoded = jwt.verify(token, 'your_jwt_secret');
             req.user = decoded;
 
+            console.log('User role:', req.user.role); // Debug log
+
             if (!roles.includes(req.user.role)) {
+                console.log('Access denied: User does not have required role');
                 return res.status(403).send('Access denied');
             }
 
             next();
         } catch (err) {
+            console.error('Token validation error:', err);
             return res.status(401).send('Invalid token');
         }
     };
