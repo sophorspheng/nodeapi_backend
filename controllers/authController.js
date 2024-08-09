@@ -19,7 +19,17 @@ const transporter = nodemailer.createTransport({
 
 
 exports.register = (req, res) => {
+    // const newUser = req.body;
+
+    // User.createUser(newUser, (err, result) => {
+    //     if (err) {
+    //         res.status(500).send({ message: 'Error registering user' });
+    //     } else {
+    //         res.status(201).send({ message: 'User registered successfully' });
+    //     }
+    // });
     const newUser = req.body;
+    newUser.role = req.body.role || 'user'; // Default role is 'user' if not provided
 
     User.createUser(newUser, (err, result) => {
         if (err) {
@@ -40,9 +50,11 @@ exports.login = (req, res) => {
             const user = results[0];
             bcrypt.compare(password, user.password, (err, isMatch) => {
                 if (isMatch && !err) {
-                    const token = jwt.sign({ id: user.id }, 'your_jwt_secret', {
-                        expiresIn: '1h'
-                    });
+                    const token = jwt.sign(
+                        { id: user.id, role: user.role }, // Include role in the token
+                        'your_jwt_secret',
+                        { expiresIn: '1h' }
+                    );
                     res.status(200).send({ token });
                 } else {
                     res.status(401).send({ message: 'Authentication failed. Wrong password.' });
@@ -50,6 +62,25 @@ exports.login = (req, res) => {
             });
         }
     });
+    // const { email, password } = req.body;
+
+    // User.findByEmail(email, (err, results) => {
+    //     if (err || results.length === 0) {
+    //         res.status(401).send({ message: 'Authentication failed. User not found.' });
+    //     } else {
+    //         const user = results[0];
+    //         bcrypt.compare(password, user.password, (err, isMatch) => {
+    //             if (isMatch && !err) {
+    //                 const token = jwt.sign({ id: user.id }, 'your_jwt_secret', {
+    //                     expiresIn: '1h'
+    //                 });
+    //                 res.status(200).send({ token });
+    //             } else {
+    //                 res.status(401).send({ message: 'Authentication failed. Wrong password.' });
+    //             }
+    //         });
+    //     }
+    // });
 };
 
 exports.forgotPassword = (req, res) => {

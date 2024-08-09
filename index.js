@@ -9,8 +9,8 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
+const authorizeRoles = require('./middleware/authorizeRoles');
 const app = express();
-
 // Initialize Cloudinary
 cloudinary.config({
     cloud_name: 'dqam4so8m',
@@ -87,7 +87,24 @@ app.post('/upload', upload.array('images', 10), (req, res) => { // Allow up to 1
 
 
 // API endpoint to get form data including image URL
-app.get('/data', (req, res) => {
+// app.get('/data', (req, res) => {
+//     const query = 'SELECT id, name, image_path FROM forms';
+//     db.query(query, (error, results) => {
+//         if (error) {
+//             return res.status(500).json({ error: 'Database query error' });
+//         }
+
+//         const data = results.map(row => ({
+//             id: row.id,
+//             name: row.name,
+//             image: row.image_path // Already a full URL
+//         }));
+
+//         res.json(data);
+//     });
+// });
+// Protected route: Both admins and users can access
+app.get('/data', authorizeRoles('admin', 'user'), (req, res) => {
     const query = 'SELECT id, name, image_path FROM forms';
     db.query(query, (error, results) => {
         if (error) {
@@ -104,7 +121,8 @@ app.get('/data', (req, res) => {
     });
 });
 
-app.delete('/delete/:id', (req, res) => {
+// Protected route: Only admins can access
+app.delete('/delete/:id', authorizeRoles('admin'), (req, res) => {
     const id = req.params.id;
 
     // Query to fetch the image path from the database
@@ -151,6 +169,53 @@ app.delete('/delete/:id', (req, res) => {
         });
     });
 });
+// app.delete('/delete/:id', (req, res) => {
+//     const id = req.params.id;
+
+//     // Query to fetch the image path from the database
+//     const selectQuery = 'SELECT image_path FROM forms WHERE id = ?';
+
+//     db.query(selectQuery, [id], (err, results) => {
+//         if (err) {
+//             console.error('Database query error:', err);
+//             return res.status(500).send('Server error');
+//         }
+
+//         if (results.length === 0) {
+//             return res.status(404).send('Record not found');
+//         }
+
+//         const imageUrl = results[0].image_path;
+        
+//         // Extract the public ID including the folder structure
+//         const imagePathParts = imageUrl.split('/upload/');
+//         const publicId = imagePathParts[1].split('.')[0]; // Extract the public_id without the extension
+
+//         // Delete the image from Cloudinary
+//         cloudinary.uploader.destroy(publicId, (error) => {
+//             if (error) {
+//                 console.error('Cloudinary deletion error:', error);
+//                 return res.status(500).send('Failed to delete image from Cloudinary');
+//             }
+
+//             // Delete the record from the database
+//             const deleteQuery = 'DELETE FROM forms WHERE id = ?';
+
+//             db.query(deleteQuery, [id], (err, result) => {
+//                 if (err) {
+//                     console.error('Database deletion error:', err);
+//                     return res.status(500).send('Server error');
+//                 }
+
+//                 if (result.affectedRows === 0) {
+//                     return res.status(404).send('Record not found');
+//                 }
+
+//                 res.send('Record and image deleted successfully');
+//             });
+//         });
+//     });
+// });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
