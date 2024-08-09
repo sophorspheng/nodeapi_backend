@@ -9,9 +9,8 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
-const authorizeRoles = require('./middleware/authorizeRoles');
-const jwt = require('jsonwebtoken');
 const app = express();
+
 // Initialize Cloudinary
 cloudinary.config({
     cloud_name: 'dqam4so8m',
@@ -32,9 +31,6 @@ app.get("/", (req, res) => {
     res.send("Hello! My name is PHENG SOPHORS, Thank You for using my API services. For any problems, contact me via email: sophorspheng.num@gmail.com");
 });
 // Endpoint to report an image
-app.get('/test-role', authorizeRoles('admin', 'user'), (req, res) => {
-    res.send(`Role is: ${req.user.role}`);
-});
 
 
 app.post('/upload', upload.array('images', 10), (req, res) => { // Allow up to 10 images
@@ -107,96 +103,54 @@ app.get('/data', (req, res) => {
         res.json(data);
     });
 });
-app.delete('/delete/:id', authorizeRoles('admin'), (req, res) => {
+
+app.delete('/delete/:id', (req, res) => {
     const id = req.params.id;
 
+    // Query to fetch the image path from the database
     const selectQuery = 'SELECT image_path FROM forms WHERE id = ?';
 
     db.query(selectQuery, [id], (err, results) => {
         if (err) {
             console.error('Database query error:', err);
-            return res.status(500).json({ error: 'Server error' });
+            return res.status(500).send('Server error');
         }
 
         if (results.length === 0) {
-            return res.status(404).json({ error: 'Record not found' });
+            return res.status(404).send('Record not found');
         }
 
         const imageUrl = results[0].image_path;
+        
+        // Extract the public ID including the folder structure
         const imagePathParts = imageUrl.split('/upload/');
-        const publicId = imagePathParts[1].split('.')[0];
+        const publicId = imagePathParts[1].split('.')[0]; // Extract the public_id without the extension
 
+        // Delete the image from Cloudinary
         cloudinary.uploader.destroy(publicId, (error) => {
             if (error) {
                 console.error('Cloudinary deletion error:', error);
-                return res.status(500).json({ error: 'Failed to delete image from Cloudinary' });
+                return res.status(500).send('Failed to delete image from Cloudinary');
             }
 
+            // Delete the record from the database
             const deleteQuery = 'DELETE FROM forms WHERE id = ?';
 
             db.query(deleteQuery, [id], (err, result) => {
                 if (err) {
                     console.error('Database deletion error:', err);
-                    return res.status(500).json({ error: 'Server error' });
+                    return res.status(500).send('Server error');
                 }
 
                 if (result.affectedRows === 0) {
-                    return res.status(404).json({ error: 'Record not found' });
+                    return res.status(404).send('Record not found');
                 }
 
-                res.json({ message: 'Record and image deleted successfully' });
+                res.send('Record and image deleted successfully');
             });
         });
     });
 });
-
-// app.delete('/delete/:id', (req, res) => {
-//     const id = req.params.id;
-
-//     // Query to fetch the image path from the database
-//     const selectQuery = 'SELECT image_path FROM forms WHERE id = ?';
-
-//     db.query(selectQuery, [id], (err, results) => {
-//         if (err) {
-//             console.error('Database query error:', err);
-//             return res.status(500).send('Server error');
-//         }
-
-//         if (results.length === 0) {
-//             return res.status(404).send('Record not found');
-//         }
-
-//         const imageUrl = results[0].image_path;
-        
-//         // Extract the public ID including the folder structure
-//         const imagePathParts = imageUrl.split('/upload/');
-//         const publicId = imagePathParts[1].split('.')[0]; // Extract the public_id without the extension
-
-//         // Delete the image from Cloudinary
-//         cloudinary.uploader.destroy(publicId, (error) => {
-//             if (error) {
-//                 console.error('Cloudinary deletion error:', error);
-//                 return res.status(500).send('Failed to delete image from Cloudinary');
-//             }
-
-//             // Delete the record from the database
-//             const deleteQuery = 'DELETE FROM forms WHERE id = ?';
-
-//             db.query(deleteQuery, [id], (err, result) => {
-//                 if (err) {
-//                     console.error('Database deletion error:', err);
-//                     return res.status(500).send('Server error');
-//                 }
-
-//                 if (result.affectedRows === 0) {
-//                     return res.status(404).send('Record not found');
-//                 }
-
-//                 res.send('Record and image deleted successfully');
-//             });
-//         });
-//     });
-// });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
