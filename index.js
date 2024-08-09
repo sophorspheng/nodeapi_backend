@@ -87,22 +87,22 @@ app.post('/upload', upload.array('images', 10), (req, res) => { // Allow up to 1
 
 
 // API endpoint to get form data including image URL
-// app.get('/data', (req, res) => {
-//     const query = 'SELECT id, name, image_path FROM forms';
-//     db.query(query, (error, results) => {
-//         if (error) {
-//             return res.status(500).json({ error: 'Database query error' });
-//         }
+app.get('/data', (req, res) => {
+    const query = 'SELECT id, name, image_path FROM forms';
+    db.query(query, (error, results) => {
+        if (error) {
+            return res.status(500).json({ error: 'Database query error' });
+        }
 
-//         const data = results.map(row => ({
-//             id: row.id,
-//             name: row.name,
-//             image: row.image_path // Already a full URL
-//         }));
+        const data = results.map(row => ({
+            id: row.id,
+            name: row.name,
+            image: row.image_path // Already a full URL
+        }));
 
-//         res.json(data);
-//     });
-// });
+        res.json(data);
+    });
+});
 // Protected route: Both admins and users can access
 app.get('/data', authorizeRoles('admin', 'user'), (req, res) => {
     const query = 'SELECT id, name, image_path FROM forms';
