@@ -41,6 +41,7 @@ exports.register = (req, res) => {
 };
 
 exports.login = (req, res) => {
+   
     const { email, password } = req.body;
 
     User.findByEmail(email, (err, results) => {
@@ -50,11 +51,9 @@ exports.login = (req, res) => {
             const user = results[0];
             bcrypt.compare(password, user.password, (err, isMatch) => {
                 if (isMatch && !err) {
-                    const token = jwt.sign(
-                        { id: user.id, role: user.role }, // Include role in the token
-                        'your_jwt_secret',
-                        { expiresIn: '1h' }
-                    );
+                    const token = jwt.sign({ id: user.id }, 'your_jwt_secret', {
+                        expiresIn: '1h'
+                    });
                     res.status(200).send({ token });
                 } else {
                     res.status(401).send({ message: 'Authentication failed. Wrong password.' });
@@ -62,25 +61,6 @@ exports.login = (req, res) => {
             });
         }
     });
-    // const { email, password } = req.body;
-
-    // User.findByEmail(email, (err, results) => {
-    //     if (err || results.length === 0) {
-    //         res.status(401).send({ message: 'Authentication failed. User not found.' });
-    //     } else {
-    //         const user = results[0];
-    //         bcrypt.compare(password, user.password, (err, isMatch) => {
-    //             if (isMatch && !err) {
-    //                 const token = jwt.sign({ id: user.id }, 'your_jwt_secret', {
-    //                     expiresIn: '1h'
-    //                 });
-    //                 res.status(200).send({ token });
-    //             } else {
-    //                 res.status(401).send({ message: 'Authentication failed. Wrong password.' });
-    //             }
-    //         });
-    //     }
-    // });
 };
 
 exports.forgotPassword = (req, res) => {
