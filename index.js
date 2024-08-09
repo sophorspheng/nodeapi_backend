@@ -8,6 +8,7 @@ const path = require('path');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const authorizeRoles = require('./middleware/authorizeRoles');
+const jwt = require('jsonwebtoken'); // Ensure jwt is required for token signing/verification
 
 const app = express();
 
@@ -153,9 +154,6 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
-
-
-
 
 
 // const express = require('express');
