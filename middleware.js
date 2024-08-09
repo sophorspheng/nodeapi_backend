@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 
 function authorizeRoles(...roles) {
     return (req, res, next) => {
-        const token = req.headers['authorization']?.split(' ')[1]; // Get token from "Bearer <token>"
+        const token = req.headers['authorization']?.split(' ')[1];
 
         if (!token) {
             console.log('No token provided');
@@ -10,10 +10,10 @@ function authorizeRoles(...roles) {
         }
 
         try {
-            const decoded = jwt.verify(token, 'your_jwt_secret'); // Ensure this matches the secret used for signing
+            const decoded = jwt.verify(token, 'your_jwt_secret');
             req.user = decoded;
 
-            console.log('Decoded token:', decoded); // Debug log
+            console.log('Decoded token:', decoded);
 
             if (!roles.includes(req.user.role)) {
                 console.log('Access denied: User does not have required role');
