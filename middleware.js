@@ -9,7 +9,7 @@ function authorizeRoles(...roles) {
         }
 
         try {
-            const decoded = jwt.verify(token, 'your_jwt_secret');
+            const decoded = jwt.verify(token, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Miwicm9sZSI6InVzZXIiLCJpYXQiOjE3MjMyMTkyMjQsImV4cCI6MTcyMzIyMjgyNH0.RNt37iaXhVTP2Tp0LjFVFiXO54Ak5bXTm9oaxgWOhCE');
             req.user = decoded;
 
             if (!roles.includes(req.user.role)) {
