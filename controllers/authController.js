@@ -2,6 +2,7 @@ const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 // const bcrypt = require('bcrypt');
 const bcrypt = require('bcryptjs');
+const db = require('../config/db');
 
 
 const nodemailer = require('nodemailer');
@@ -41,26 +42,46 @@ exports.register = (req, res) => {
 };
 
 exports.login = (req, res) => {
-   
-    const { email, password } = req.body;
+   const { email, password } = req.body;
+  if (!email || !password) return res.sendStatus(400);
 
-    User.findByEmail(email, (err, results) => {
-        if (err || results.length === 0) {
-            res.status(401).send({ message: 'Authentication failed. User not found.' });
-        } else {
-            const user = results[0];
-            bcrypt.compare(password, user.password, (err, isMatch) => {
-                if (isMatch && !err) {
-                    const token = jwt.sign({ id: user.id }, 'your_jwt_secret', {
-                        expiresIn: '1h'
-                    });
-                    res.status(200).send({ token });
-                } else {
-                    res.status(401).send({ message: 'Authentication failed. Wrong password.' });
-                }
-            });
-        }
+  db.query('SELECT * FROM users WHERE email = ?', [email], (err, results) => {
+    if (err) return res.sendStatus(500);
+    if (results.length === 0) return res.sendStatus(401);
+
+    const user = results[0];
+    bcrypt.compare(password, user.password, (err, match) => {
+      if (err) return res.sendStatus(500);
+      if (!match) return res.sendStatus(401);
+
+    //   const token = jwt.sign({ username: user.email, role: user.role }, db.jwtSecret, { expiresIn: '1h' });
+    const token = jwt.sign(
+        { name: user.email, role: user.role },
+        'JLAJO12@#)@*(#jsljdalsj121923#*@@*#3uj293', // Replace with a valid secret key
+        { expiresIn: '1h' }
+      );
+      res.json({ token, role: user.role});
     });
+  });
+    // const { email, password } = req.body;
+
+    // User.findByEmail(email, (err, results) => {
+    //     if (err || results.length === 0) {
+    //         res.status(401).send({ message: 'Authentication failed. User not found.' });
+    //     } else {
+    //         const user = results[0];
+    //         bcrypt.compare(password, user.password, (err, isMatch) => {
+    //             if (isMatch && !err) {
+    //                 const token = jwt.sign({ id: user.id }, 'your_jwt_secret', {
+    //                     expiresIn: '1h'
+    //                 });
+    //                 res.status(200).send({ token });
+    //             } else {
+    //                 res.status(401).send({ message: 'Authentication failed. Wrong password.' });
+    //             }
+    //         });
+    //     }
+    // });
 };
 
 exports.forgotPassword = (req, res) => {

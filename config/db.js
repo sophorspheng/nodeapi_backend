@@ -6,7 +6,9 @@ const db = mysql.createConnection({
     password: '89ZhwLv0lOFI50utVfUU',
     database: 'bly8lzj6xutf9s2k61rc',
     port: 3306
-});
+},
+  
+);
 
 db.connect((err) => {
     if (err) {
@@ -14,5 +16,5 @@ db.connect((err) => {
     }
     console.log('MySQL Connected...');
 });
-
+// jwtSecret: 'JLAJO12@#)@*(#jsljdalsj121923#*@@*#3uj293';
 module.exports = db;

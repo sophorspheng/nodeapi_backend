@@ -10,7 +10,21 @@ const fs = require('fs');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const app = express();
-
+// const mysql = require('mysql2');
+// const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const jwtSecret = 'JLAJO12@#)@*(#jsljdalsj121923#*@@*#3uj293'
+// Middleware to authenticate JWT and check role
+const authenticateJWT = (req, res, next) => {
+    const token = req.header('Authorization')?.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+  
+    jwt.verify(token, jwtSecret, (err, user) => {
+      if (err) return res.sendStatus(403);
+      req.user = user;
+      next();
+    });
+  };
 // Initialize Cloudinary
 cloudinary.config({
     cloud_name: 'dqam4so8m',
@@ -103,11 +117,11 @@ app.get('/data', (req, res) => {
         res.json(data);
     });
 });
-
-app.delete('/delete/:id', (req, res) => {
-    const id = req.params.id;
-
-    // Query to fetch the image path from the database
+// Admin-only route to delete a user by ID
+app.delete('/delete/:id', authenticateJWT, (req, res) => {
+    if (req.user.role !== 'admin') return res.sendStatus(403);
+  
+    const { id } = req.params;
     const selectQuery = 'SELECT image_path FROM forms WHERE id = ?';
 
     db.query(selectQuery, [id], (err, results) => {
@@ -133,28 +147,77 @@ app.delete('/delete/:id', (req, res) => {
                 return res.status(500).send('Failed to delete image from Cloudinary');
             }
 
-            // Delete the record from the database
-            const deleteQuery = 'DELETE FROM forms WHERE id = ?';
+    // Delete the record from the database
+    const deleteQuery = 'DELETE FROM forms WHERE id = ?';
 
-            db.query(deleteQuery, [id], (err, result) => {
-                if (err) {
-                    console.error('Database deletion error:', err);
-                    return res.status(500).send('Server error');
-                }
+    db.query(deleteQuery, [id], (err, result) => {
+        if (err) {
+            console.error('Database deletion error:', err);
+            return res.status(500).send('Server error');
+        }
 
-                if (result.affectedRows === 0) {
-                    return res.status(404).send('Record not found');
-                }
+        if (result.affectedRows === 0) {
+            return res.status(404).send('Record not found');
+        }
 
-                res.send('Record and image deleted successfully');
-            });
-        });
+        res.send('Record and image deleted successfully');
     });
 });
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
 });
+});
+
+// app.delete('/delete/:id', (req, res) => {
+//     const id = req.params.id;
+
+//     // Query to fetch the image path from the database
+//     const selectQuery = 'SELECT image_path FROM forms WHERE id = ?';
+
+//     db.query(selectQuery, [id], (err, results) => {
+//         if (err) {
+//             console.error('Database query error:', err);
+//             return res.status(500).send('Server error');
+//         }
+
+//         if (results.length === 0) {
+//             return res.status(404).send('Record not found');
+//         }
+
+//         const imageUrl = results[0].image_path;
+        
+//         // Extract the public ID including the folder structure
+//         const imagePathParts = imageUrl.split('/upload/');
+//         const publicId = imagePathParts[1].split('.')[0]; // Extract the public_id without the extension
+
+//         // Delete the image from Cloudinary
+//         cloudinary.uploader.destroy(publicId, (error) => {
+//             if (error) {
+//                 console.error('Cloudinary deletion error:', error);
+//                 return res.status(500).send('Failed to delete image from Cloudinary');
+//             }
+
+//             // Delete the record from the database
+//             const deleteQuery = 'DELETE FROM forms WHERE id = ?';
+
+//             db.query(deleteQuery, [id], (err, result) => {
+//                 if (err) {
+//                     console.error('Database deletion error:', err);
+//                     return res.status(500).send('Server error');
+//                 }
+
+//                 if (result.affectedRows === 0) {
+//                     return res.status(404).send('Record not found');
+//                 }
+
+//                 res.send('Record and image deleted successfully');
+//             });
+//         });
+//     });
+// });
+
+const PORT = 3001; // Change to any available port number
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
+
 
 module.exports = app;
