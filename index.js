@@ -101,7 +101,7 @@ app.post('/upload', upload.array('images', 10), (req, res) => { // Allow up to 1
 
 
 // API endpoint to get form data including image URL
-app.get('/data', (req, res) => {
+app.get('/data',authenticateJWT, (req, res) => {
     const query = 'SELECT id, name, image_path FROM forms';
     db.query(query, (error, results) => {
         if (error) {
