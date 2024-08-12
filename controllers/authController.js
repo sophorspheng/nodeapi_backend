@@ -8,11 +8,8 @@ const storage = multer.memoryStorage(); // Store file in memory
 const upload = multer({ storage: storage });
 const bcrypt = require("bcryptjs");
 const cloudinary = require("../middleware/cloudinary");
-const transporter = require('../middleware/transporter')
-const mysql = require('mysql2');
-
-
-
+const transporter = require("../middleware/transporter");
+const mysql = require("mysql2");
 
 ///create new users or admin accounts
 
@@ -39,7 +36,9 @@ exports.register = (req, res) => {
 
   // Validate password length
   if (password.length < 8) {
-    return res.status(400).json({ message: "Password must be at least 8 characters long." });
+    return res
+      .status(400)
+      .json({ message: "Password must be at least 8 characters long." });
   }
 
   // Hash the password
@@ -49,21 +48,23 @@ exports.register = (req, res) => {
     }
 
     // Insert user into MySQL database
-    const query = 'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)';
-    
-    db.query(query, [name, email, hashedPassword, role || 'user'], (err, results) => {
-      if (err) {
-        console.error("Error registering user:", err);
-        return res.status(500).json({ message: "Error registering user." });
-      } else {
-        res.status(201).json({ message: "User registered successfully." });
+    const query =
+      "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)";
+
+    db.query(
+      query,
+      [name, email, hashedPassword, role || "user"],
+      (err, results) => {
+        if (err) {
+          console.error("Error registering user:", err);
+          return res.status(500).json({ message: "Error registering user." });
+        } else {
+          res.status(201).json({ message: "User registered successfully." });
+        }
       }
-    });
+    );
   });
 };
-
-
-
 
 ///sigin users or admin accounts
 exports.login = (req, res) => {
@@ -71,7 +72,9 @@ exports.login = (req, res) => {
 
   // Check if email and password are provided
   if (!email || !password) {
-    return res.status(400).json({ message: "Email and password are required." });
+    return res
+      .status(400)
+      .json({ message: "Email and password are required." });
   }
 
   // Query the database to find the user by email
@@ -99,16 +102,23 @@ exports.login = (req, res) => {
       if (!match) {
         return res.status(401).json({ message: "Incorrect password." });
       }
+// Generate a JWT token upon successful login
+const token = jwt.sign({ id: user.id, name: user.email, role: user.role }, "JLAJO12@#)@*(#jsljdalsj121923#*@@*#3uj293", { expiresIn: "1h" });
+
+// Send the token and user role in the response
+res.json({ token, role: user.role, id: user.id });
+console.log("User ID:", user.id);
 
       // Generate a JWT token upon successful login
-      const token = jwt.sign(
-        { name: user.email, role: user.role },
-        "JLAJO12@#)@*(#jsljdalsj121923#*@@*#3uj293", // Replace with a valid secret key
-        { expiresIn: "1h" }
-      );
+//       const token = jwt.sign({id: user.id, name: user.email, role: user.role },"JLAJO12@#)@*(#jsljdalsj121923#*@@*#3uj293", // Replace with a valid secret key
+//         { expiresIn: "1h" }
+//       );
+// /// const token = jwt.sign({ id: user.id, username: user.username }, 'your_jwt_secret', { expiresIn: '1h' });
 
-      // Send the token and user role in the response
-      res.json({ token, role: user.role });
+//       // Send the token and user role in the response
+//       // res.json({ token, role: user.role,id: user.id });
+//       res.json({ token, role: user.role, id: user.id });
+
     });
   });
 };
@@ -136,8 +146,6 @@ exports.login = (req, res) => {
 //     });
 //   });
 // };
-
-
 
 //forgotten password users and admin can be reset
 
@@ -177,8 +185,6 @@ exports.forgotPassword = (req, res) => {
   });
 };
 
-
-
 ///reset password users account renew password suddenly
 
 exports.resetPassword = (req, res) => {
@@ -214,8 +220,6 @@ exports.resetPassword = (req, res) => {
   });
 };
 
-
-
 ///Display and Calling Data
 
 exports.getData = (req, res) => {
@@ -234,8 +238,6 @@ exports.getData = (req, res) => {
     res.json(data);
   });
 };
-
-
 
 ///Remove one data record
 
@@ -287,8 +289,6 @@ exports.deleteImage = (req, res) => {
     });
   });
 };
-
-
 
 ///upload data to the server
 
@@ -348,6 +348,5 @@ exports.uploadData = (req, res) => {
       res.status(500).json({ error: "Error uploading images" });
     });
 };
-
 
 /*....................................Thank You!............................*/

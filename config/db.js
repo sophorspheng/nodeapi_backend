@@ -1,5 +1,5 @@
 const mysql = require('mysql');
-
+// const mysql = require('mysql2/promise');
 const db = mysql.createPool({
   connectionLimit: 10, // Adjust based on your needs
   host: 'bly8lzj6xutf9s2k61rc-mysql.services.clever-cloud.com',

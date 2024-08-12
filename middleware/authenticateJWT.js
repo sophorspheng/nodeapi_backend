@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const jwtSecret = 'JLAJO12@#)@*(#jsljdalsj121923#*@@*#3uj293'
 // Middleware to authenticate JWT and check role
 const authenticateJWT = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
   const token = req.header('Authorization')?.split(' ')[1];
   if (!token) return res.sendStatus(401);
 
@@ -12,3 +13,6 @@ const authenticateJWT = (req, res, next) => {
   });
 };
 module.exports = authenticateJWT;
+
+
+
