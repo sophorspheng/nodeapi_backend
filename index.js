@@ -1,9 +1,5 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const admin = require('firebase-admin')
-const serviceAccount = require('./mobileapp-76bf0-firebase-adminsdk-djh1m-6faea1d649.json')
-const webpush = require("web-push")
-// import express, { json } from "express";
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -13,8 +9,6 @@ const notifyAdmin = require('./middleware/notifyAdmin')
 const pool = require('./config/db');
 const db = require('./config/db');
 const app = express();
-// const publicVapidKey  = 'BCgJqWRVIM3B2lyWqILZ8cBKJXEWW9IOAEliQhSaZxcR8YpjYMR9q9EoMNC56XRHVfzF4eLdv1FlADrrh47PDuA';
-// const privateVapidKey = '7wLdTeWRw2kK1tiQgm45GcM8NcJBgJ-Cdj8iYJaKWXU';
 const path = require('path')
 
 
@@ -29,7 +23,7 @@ app.use(express.json());
 // Route handling
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-//i can of u
+
 
 // Welcome message route
 app.get("/", (req, res) => {
