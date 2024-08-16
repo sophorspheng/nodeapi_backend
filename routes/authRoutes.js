@@ -10,6 +10,7 @@ const storage = multer.memoryStorage(); // Store file in memory
 const upload = multer({ storage: storage });
 
 router.post('/register', authController.register);
+router.post('/verify', authController.verifyAccount);
 router.post('/login', authController.login);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);

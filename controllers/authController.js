@@ -7,10 +7,36 @@ const path = require("path");
 const storage = multer.memoryStorage(); // Store file in memory
 const upload = multer({ storage: storage });
 const bcrypt = require("bcryptjs");
+const crypto = require('crypto')
+const nodemailer = require('nodemailer');
 const cloudinary = require("../middleware/cloudinary");
 const transporter = require("../middleware/transporter");
 const mysql = require("mysql2");
 
+const sendVerificationEmail = (email, verificationCode) => {
+  const transporter = nodemailer.createTransport({
+    service: 'Gmail', // or any other email service
+    auth: {
+      user: 'sophorspheng.num@gmail.com',
+      pass: 'uhrv bmpv jmkj jfxn'
+    }
+  });
+
+  const mailOptions = {
+    from: 'sophorspheng.num@gmail.com',
+    to: email,
+    subject: 'Verify Your Email',
+    text: `Please verify your email by using the following code: ${verificationCode}`
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error("Error sending verification email:", error);
+    } else {
+      console.log('Verification email sent:', info.response);
+    }
+  });
+};
 ///create new users or admin accounts
 
 // exports.register = (req, res) => {
@@ -31,6 +57,10 @@ const mysql = require("mysql2");
 //     }
 //   });
 // };
+const generateVerificationCode = () => {
+  return Math.floor(1000 + Math.random() * 9000).toString(); // Generates a 4-digit number as a string
+};
+
 exports.register = (req, res) => {
   const { name, email, password, role } = req.body;
 
@@ -41,6 +71,12 @@ exports.register = (req, res) => {
       .json({ message: "Password must be at least 8 characters long." });
   }
 
+  // Generate a 4-digit verification code
+  const verificationCode = generateVerificationCode();
+
+  // Get the current timestamp
+  const registrationTime = new Date();
+
   // Hash the password
   bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) {
@@ -49,22 +85,113 @@ exports.register = (req, res) => {
 
     // Insert user into MySQL database
     const query =
-      "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)";
+      "INSERT INTO users (name, email, password, role, verification_code, is_verified, registration_time) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
     db.query(
       query,
-      [name, email, hashedPassword, role || "user"],
+      [name, email, hashedPassword, role || "user", verificationCode, false, registrationTime],
       (err, results) => {
         if (err) {
           console.error("Error registering user:", err);
           return res.status(500).json({ message: "Error registering user." });
-        } else {
-          res.status(201).json({ message: "User registered successfully." });
         }
+
+        // Send the 4-digit verification code to the user
+        sendVerificationEmail(email, verificationCode);
+
+        res.status(201).json({ message: "User registered successfully. Please check your email to verify your account." });
       }
     );
   });
 };
+
+const checkUnverifiedAccounts = () => {
+  const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+
+  const query = "DELETE FROM users WHERE is_verified = false AND registration_time < ?";
+  
+  db.query(query, [tenMinutesAgo], (err, results) => {
+    if (err) {
+      console.error("Error deleting unverified accounts:", err);
+    } else {
+      console.log(`Deleted ${results.affectedRows} unverified accounts.`);
+    }
+  });
+};
+
+// Check every minute
+setInterval(checkUnverifiedAccounts, 60 * 1000);
+
+
+
+exports.verifyAccount = (req, res) => {
+  const { email, verificationCode } = req.body;
+
+  if (!email || !verificationCode) {
+    return res.status(400).json({ message: "Email and verification code are required." });
+  }
+
+  const query = "SELECT * FROM users WHERE email = ? AND verification_code = ? AND is_verified = false";
+
+  db.query(query, [email, verificationCode], (err, results) => {
+    if (err) {
+      console.error("Error verifying account:", err);
+      return res.status(500).json({ message: "Error verifying account." });
+    }
+
+    if (results.length === 0) {
+      return res.status(400).json({ message: "Invalid or expired verification code." });
+    }
+
+    const updateQuery = "UPDATE users SET is_verified = true, verification_code = NULL WHERE email = ?";
+
+    db.query(updateQuery, [email], (err, updateResults) => {
+      if (err) {
+        console.error("Error updating user verification status:", err);
+        return res.status(500).json({ message: "Error updating user verification status." });
+      }
+
+      res.status(200).json({ message: "Account verified successfully. You can now log in." });
+    });
+  });
+};
+
+
+
+// exports.register = (req, res) => {
+//   const { name, email, password, role } = req.body;
+
+//   // Validate password length
+//   if (password.length < 8) {
+//     return res
+//       .status(400)
+//       .json({ message: "Password must be at least 8 characters long." });
+//   }
+
+//   // Hash the password
+//   bcrypt.hash(password, 10, (err, hashedPassword) => {
+//     if (err) {
+//       return res.status(500).json({ message: "Error hashing password." });
+//     }
+
+//     // Insert user into MySQL database
+//     const query =
+//       "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)";
+
+//     db.query(
+//       query,
+//       [name, email, hashedPassword, role || "user"],
+//       (err, results) => {
+//         if (err) {
+//           console.error("Error registering user:", err);
+//           return res.status(500).json({ message: "Error registering user." });
+//         } else {
+//           res.status(201).json({ message: "User registered successfully." });
+//         }
+//       }
+//     );
+//   });
+// };
 
 ///sigin users or admin accounts
 exports.login = (req, res) => {
@@ -91,37 +218,53 @@ exports.login = (req, res) => {
 
     const user = results[0];
 
-    // Compare the provided password with the hashed password in the database
-    bcrypt.compare(password, user.password, (err, match) => {
-      if (err) {
-        console.error("Bcrypt error:", err);
-        return res.status(500).json({ message: "Internal server error." });
+    // Check if the user is verified
+    if (!user.is_verified) {
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+
+      // If the account was created more than 10 minutes ago and is not verified, delete it
+      if (new Date(user.registration_time) < tenMinutesAgo) {
+        const deleteQuery = "DELETE FROM users WHERE email = ?";
+        db.query(deleteQuery, [email], (err, deleteResult) => {
+          if (err) {
+            console.error("Error deleting unverified account:", err);
+            return res.status(500).json({ message: "Internal server error." });
+          }
+
+          return res.status(401).json({ message: "Verification time expired. Please register again." });
+        });
+      } else {
+        return res.status(403).json({ message: "Please verify your email before logging in." });
       }
+    } else {
+      // Compare the provided password with the hashed password in the database
+      bcrypt.compare(password, user.password, (err, match) => {
+        if (err) {
+          console.error("Bcrypt error:", err);
+          return res.status(500).json({ message: "Internal server error." });
+        }
 
-      // If the password does not match
-      if (!match) {
-        return res.status(401).json({ message: "Incorrect password." });
-      }
-// Generate a JWT token upon successful login
-const token = jwt.sign({ id: user.id, name: user.email, role: user.role }, "JLAJO12@#)@*(#jsljdalsj121923#*@@*#3uj293", { expiresIn: "1h" });
+        // If the password does not match
+        if (!match) {
+          return res.status(401).json({ message: "Incorrect password." });
+        }
 
-// Send the token and user role in the response
-res.json({ token, role: user.role, id: user.id });
-console.log("User ID:", user.id);
+        // Generate a JWT token upon successful login
+        const token = jwt.sign(
+          { id: user.id, name: user.email, role: user.role },
+          "JLAJO12@#)@*(#jsljdalsj121923#*@@*#3uj293",
+          { expiresIn: "1h" }
+        );
 
-      // Generate a JWT token upon successful login
-//       const token = jwt.sign({id: user.id, name: user.email, role: user.role },"JLAJO12@#)@*(#jsljdalsj121923#*@@*#3uj293", // Replace with a valid secret key
-//         { expiresIn: "1h" }
-//       );
-// /// const token = jwt.sign({ id: user.id, username: user.username }, 'your_jwt_secret', { expiresIn: '1h' });
-
-//       // Send the token and user role in the response
-//       // res.json({ token, role: user.role,id: user.id });
-//       res.json({ token, role: user.role, id: user.id });
-
-    });
+        // Send the token, user role, and user ID in the response
+        res.json({ token, role: user.role, id: user.id });
+        console.log("User ID:", user.id);
+      });
+    }
   });
 };
+
+
 
 // exports.login = (req, res) => {
 //   const { email, password } = req.body;
