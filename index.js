@@ -1,5 +1,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const admin = require('firebase-admin')
+const serviceAccount = require('./mobileapp-76bf0-firebase-adminsdk-djh1m-6faea1d649.json')
+const webpush = require("web-push")
+// import express, { json } from "express";
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -9,19 +13,80 @@ const notifyAdmin = require('./middleware/notifyAdmin')
 const pool = require('./config/db');
 const db = require('./config/db');
 const app = express();
+// const publicVapidKey  = 'BCgJqWRVIM3B2lyWqILZ8cBKJXEWW9IOAEliQhSaZxcR8YpjYMR9q9EoMNC56XRHVfzF4eLdv1FlADrrh47PDuA';
+// const privateVapidKey = '7wLdTeWRw2kK1tiQgm45GcM8NcJBgJ-Cdj8iYJaKWXU';
+const path = require('path')
+
+
+app.use(express.static(path.join(__dirname,"client")))
+
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.urlencoded({extended: false}));
+app.use(express.json());
 
 // Route handling
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 
+
 // Welcome message route
-app.get("/", (req, res) => {
-    res.send("Hello! My name is PHENG SOPHORS, Thank You for using my API services. For any problems, contact me via email: sophorspheng.num@gmail.com");
+// app.get("/", (req, res) => {
+//     res.send("Hello! My name is PHENG SOPHORS, Thank You for using my API services. For any problems, contact me via email: sophorspheng.num@gmail.com");
+// });
+
+const isAdmin = (req, res, next) => {
+    const userId = req.user.id;
+    db.query('SELECT role FROM users WHERE id = ?', [userId], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (results.length > 0 && results[0].role === 'admin') {
+            next();
+        } else {
+            res.status(403).json({ message: 'Access denied' });
+        }
+    });
+};
+
+app.post('/send-message',authenticateToken, isAdmin, (req, res) => {
+    const { message } = req.body;
+    const adminId = req.user.id;
+
+    db.query('INSERT INTO messages (admin_id, message) VALUES (?, ?)', [adminId, message], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        // Retrieve all user tokens
+        db.query('SELECT token FROM users WHERE token IS NOT NULL', (err, results) => {
+            if (err) return res.status(500).json({ error: err.message });
+
+            const tokens = results.map(row => row.token);
+            sendNotification(tokens, message);
+
+            res.status(200).json({ message: 'Message sent' });
+        });
+    });
 });
-// Report an image
+
+const sendNotification = (tokens, message) => {
+    // Implementation for sending push notifications (e.g., using Firebase Cloud Messaging)
+};
+
+app.post('/save-device-token', authenticateToken, (req, res) => {
+    const { token } = req.body;
+    const userId = req.user.id;
+
+    db.query('UPDATE users SET token = ? WHERE id = ?', [token, userId], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(200).json({ message: 'Token saved' });
+    });
+});
+
+
+
+
+
+
+
 // Report an image
 app.get('/api/reports', (req, res) => {
     const query = 'SELECT * FROM reports'; // Adjust query as needed

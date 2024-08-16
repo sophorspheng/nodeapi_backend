@@ -9,7 +9,8 @@ const db = mysql.createPool({
   port: 3306
 });
 
-// Function to get a connection from the pool
+
+
 function getConnection(callback) {
   db.getConnection((err, connection) => {
     if (err) {
@@ -31,6 +32,7 @@ getConnection((err, connection) => {
     console.log('The solution is:', results[0].solution);
   });
 });
+
 
 // Export the pool
 module.exports = db;

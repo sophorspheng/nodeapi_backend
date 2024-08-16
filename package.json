@@ -16,11 +16,14 @@
     "cloudinary": "^2.4.0",
     "cors": "^2.8.5",
     "express": "^4.19.2",
+    "firebase": "^10.13.0",
+    "firebase-admin": "^12.3.1",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "mysql": "^2.18.1",
     "mysql2": "^3.11.0",
     "nodemailer": "^6.9.14",
+    "web-push": "^3.6.7",
     "xoauth2": "^1.2.0"
   },
   "engines": {
