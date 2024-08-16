@@ -36,50 +36,7 @@ app.use('/api/users', userRoutes);
 //     res.send("Hello! My name is PHENG SOPHORS, Thank You for using my API services. For any problems, contact me via email: sophorspheng.num@gmail.com");
 // });
 
-const isAdmin = (req, res, next) => {
-    const userId = req.user.id;
-    db.query('SELECT role FROM users WHERE id = ?', [userId], (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (results.length > 0 && results[0].role === 'admin') {
-            next();
-        } else {
-            res.status(403).json({ message: 'Access denied' });
-        }
-    });
-};
 
-app.post('/send-message',authenticateToken, isAdmin, (req, res) => {
-    const { message } = req.body;
-    const adminId = req.user.id;
-
-    db.query('INSERT INTO messages (admin_id, message) VALUES (?, ?)', [adminId, message], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
-
-        // Retrieve all user tokens
-        db.query('SELECT token FROM users WHERE token IS NOT NULL', (err, results) => {
-            if (err) return res.status(500).json({ error: err.message });
-
-            const tokens = results.map(row => row.token);
-            sendNotification(tokens, message);
-
-            res.status(200).json({ message: 'Message sent' });
-        });
-    });
-});
-
-const sendNotification = (tokens, message) => {
-    // Implementation for sending push notifications (e.g., using Firebase Cloud Messaging)
-};
-
-app.post('/save-device-token', authenticateToken, (req, res) => {
-    const { token } = req.body;
-    const userId = req.user.id;
-
-    db.query('UPDATE users SET token = ? WHERE id = ?', [token, userId], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.status(200).json({ message: 'Token saved' });
-    });
-});
 
 
 
