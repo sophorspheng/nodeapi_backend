@@ -29,12 +29,12 @@ app.use(express.json());
 // Route handling
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-
+//i can of u
 
 // Welcome message route
-// app.get("/", (req, res) => {
-//     res.send("Hello! My name is PHENG SOPHORS, Thank You for using my API services. For any problems, contact me via email: sophorspheng.num@gmail.com");
-// });
+app.get("/", (req, res) => {
+    res.send("Hello! My name is PHENG SOPHORS, Thank You for using my API services. For any problems, contact me via email: sophorspheng.num@gmail.com");
+});
 
 
 
