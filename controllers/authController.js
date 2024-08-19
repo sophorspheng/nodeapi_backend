@@ -93,7 +93,7 @@ exports.register = (req, res) => {
       (err, results) => {
         if (err) {
           console.error("Error registering user:", err);
-          return res.status(500).json({ message: "Error registering user." });
+          return res.status(500).json({ message: "Account has been registed already." });
         }
 
         // Send the 4-digit verification code to the user
