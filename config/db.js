@@ -2,12 +2,18 @@ const mysql = require('mysql');
 // const mysql = require('mysql2/promise');
 const db = mysql.createPool({
   connectionLimit: 10, // Adjust based on your needs
-  host: 'bly8lzj6xutf9s2k61rc-mysql.services.clever-cloud.com',
-  user: 'uh2hxkyn6dvplh0q',
-  password: '89ZhwLv0lOFI50utVfUU',
-  database: 'bly8lzj6xutf9s2k61rc',
-  port: 3306
+ host: 'bly8lzj6xutf9s2k61rc-mysql.services.clever-cloud.com',
+user: 'uh2hxkyn6dvplh0q',
+password: '89ZhwLv0lOFI50utVfUU',
+database: 'bly8lzj6xutf9s2k61rc',
+port: 3306
 });
+
+// host: 'bly8lzj6xutf9s2k61rc-mysql.services.clever-cloud.com',
+// user: 'uh2hxkyn6dvplh0q',
+// password: '89ZhwLv0lOFI50utVfUU',
+// database: 'bly8lzj6xutf9s2k61rc',
+// port: 3306
 
 
 
