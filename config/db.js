@@ -1,7 +1,7 @@
 const mysql = require('mysql');
 // const mysql = require('mysql2/promise');
 const db = mysql.createPool({
-  // connectionLimit: 10, // Adjust based on your needs
+  connectionLimit: 10,
  host: '897.h.filess.io',
 user: 'MobileECM_truthfully',
 password: '4f68677060f5d016ffc2162b8be0ab3bce885cb1',
