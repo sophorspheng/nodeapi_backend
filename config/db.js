@@ -1,4 +1,5 @@
 const mysql = require('mysql');
+
 // const mysql = require('mysql2/promise');
 const db = mysql.createPool({
   connectionLimit: 10,
@@ -15,7 +16,7 @@ const db = mysql.createPool({
 // database: 'MobileECM_truthfully',
 // port: 3307
 
-/
+// /
 
 
 
