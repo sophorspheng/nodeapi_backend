@@ -13,6 +13,7 @@ const cloudinary = require("../middleware/cloudinary");
 const transporter = require("../middleware/transporter");
 const mysql = require("mysql2");
 
+
 const sendVerificationEmail = (email, verificationCode) => {
   const transporter = nodemailer.createTransport({
     service: 'Gmail', // or any other email service
@@ -39,24 +40,6 @@ const sendVerificationEmail = (email, verificationCode) => {
 };
 ///create new users or admin accounts
 
-// exports.register = (req, res) => {
-//   const { password } = req.body;
-
-//     // Validate password length
-//     if (password.length < 8) {
-//         return res.status(400).json({ message: "Password must be at least 8 characters long." });
-//     }
-//   const newUser = req.body;
-//   newUser.role = req.body.role || "user"; // Default role is 'user' if not provided
-
-//   User.createUser(newUser, (err, result) => {
-//     if (err) {
-//       res.status(500).send({ message: "Error registering user" });
-//     } else {
-//       res.status(201).send({ message: "User registered successfully" });
-//     }
-//   });
-// };
 const generateVerificationCode = () => {
   return Math.floor(1000 + Math.random() * 9000).toString(); // Generates a 4-digit number as a string
 };
@@ -434,8 +417,9 @@ exports.deleteImage = (req, res) => {
 };
 
 ///upload data to the server
+ // Make sure to adjust the path to your database module
 
-exports.uploadData = (req, res) => {
+ exports.uploadData = (req, res) => {
   const { name } = req.body;
   const files = req.files;
 
@@ -451,19 +435,23 @@ exports.uploadData = (req, res) => {
 
   const uploadPromises = files.map((file) => {
     return new Promise((resolve, reject) => {
+      // Determine the resource type based on file extension
+      const ext = file.originalname.split('.').pop().toLowerCase();
+      const resourceType = ['jpg', 'jpeg', 'png', 'gif'].includes(ext) ? 'image' : 'video';
+
       const uploadOptions = {
-        folder: "image",
-        resource_type: "image",
+        folder: "media", // Use a common folder for both images and videos
+        resource_type: resourceType,
         public_id: file.originalname.split(".")[0], // Use the file name without extension
       };
 
       cloudinary.uploader
         .upload_stream(uploadOptions, (error, result) => {
           if (error) {
-            console.error("Cloudinary upload error:", error);
+            console.error(`Cloudinary upload error for ${resourceType}:`, error);
             reject(error);
           } else {
-            resolve(result.secure_url); // Cloudinary URL of the uploaded image
+            resolve(result.secure_url); // Cloudinary URL of the uploaded media
           }
         })
         .end(file.buffer); // End the stream with the file buffer
@@ -471,9 +459,10 @@ exports.uploadData = (req, res) => {
   });
 
   Promise.all(uploadPromises)
-    .then((imageUrls) => {
+    .then((mediaUrls) => {
+      // Insert all media URLs into the database
       const query = "INSERT INTO forms (name, image_path) VALUES ?";
-      const values = imageUrls.map((imageUrl) => [name, imageUrl]);
+      const values = mediaUrls.map((mediaUrl) => [name, mediaUrl]);
 
       db.query(query, [values], (error, results) => {
         if (error) {
@@ -481,15 +470,97 @@ exports.uploadData = (req, res) => {
           return res.status(500).json({ error: "Database query error" });
         }
 
-        console.log("Image data inserted into database:", results); // Debug log
+        console.log("Media data inserted into database:", results); // Debug log
 
-        res.json({ id: results.insertId, name, images: imageUrls });
+        res.json({ id: results.insertId, name, images: mediaUrls });
       });
     })
     .catch((error) => {
-      console.error("Error uploading images:", error);
-      res.status(500).json({ error: "Error uploading images" });
+      console.error("Error uploading media:", error);
+      res.status(500).json({ error: "Error uploading media" });
     });
 };
+exports.deleteUser = (req,res) =>{
+  const { userId } = req.params; // Assuming you're passing the user ID as a URL parameter
+
+  if (!userId) {
+    return res.status(400).json({ message: "User ID is required." });
+  }
+
+  // Define the SQL query to delete the user
+  const query = "DELETE FROM users WHERE id = ?";
+
+  // Execute the query
+  db.query(query, [userId], (err, results) => {
+    if (err) {
+      console.error("Error deleting user:", err);
+      return res.status(500).json({ message: "Error deleting user." });
+    }
+
+    // Check if any rows were affected (i.e., if the user existed)
+    if (results.affectedRows === 0) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    res.status(200).json({ message: "User deleted successfully." });
+  });
+}
+
+// exports.uploadData = (req, res) => {
+//   const { name } = req.body;
+//   const files = req.files;
+
+//   if (!files || files.length === 0) {
+//     console.error("No files uploaded");
+//     return res.status(400).json({ error: "No files uploaded" });
+//   }
+
+//   console.log(
+//     "Files received for upload:",
+//     files.map((file) => file.originalname)
+//   ); // Debug log
+
+//   const uploadPromises = files.map((file) => {
+//     return new Promise((resolve, reject) => {
+//       const uploadOptions = {
+//         folder: "image",
+//         resource_type: "image",
+//         public_id: file.originalname.split(".")[0], // Use the file name without extension
+//       };
+
+//       cloudinary.uploader
+//         .upload_stream(uploadOptions, (error, result) => {
+//           if (error) {
+//             console.error("Cloudinary upload error:", error);
+//             reject(error);
+//           } else {
+//             resolve(result.secure_url); // Cloudinary URL of the uploaded image
+//           }
+//         })
+//         .end(file.buffer); // End the stream with the file buffer
+//     });
+//   });
+
+//   Promise.all(uploadPromises)
+//     .then((imageUrls) => {
+//       const query = "INSERT INTO forms (name, image_path) VALUES ?";
+//       const values = imageUrls.map((imageUrl) => [name, imageUrl]);
+
+//       db.query(query, [values], (error, results) => {
+//         if (error) {
+//           console.error("Database query error:", error);
+//           return res.status(500).json({ error: "Database query error" });
+//         }
+
+//         console.log("Image data inserted into database:", results); // Debug log
+
+//         res.json({ id: results.insertId, name, images: imageUrls });
+//       });
+//     })
+//     .catch((error) => {
+//       console.error("Error uploading images:", error);
+//       res.status(500).json({ error: "Error uploading images" });
+//     });
+// };
 
 /*....................................Thank You!............................*/
